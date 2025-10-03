@@ -1,33 +1,24 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from "@nestjs/common";
+import { Injectable, CanActivate, ExecutionContext } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
+import { UserRole } from "../users/entities/user.entity";
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    // 1. Obtém as permissões (roles) exigidas pela rota
-    const requiredRoles = this.reflector.getAllAndOverride<string[]>("roles", [context.getHandler(), context.getClass()]);
+    const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>("roles", [context.getHandler(), context.getClass()]);
 
     if (!requiredRoles) {
-      return true; // Se nenhuma permissão for exigida, permite o acesso
+      return true;
     }
 
-    // 2. Obtém o usuário (com o role) a partir do request (injetado pelo JwtAuthGuard)
-    const request = context.switchToHttp().getRequest();
-    const user = request.user; // { userId, email, role }
+    const { user } = context.switchToHttp().getRequest();
 
-    if (!user || !user.role) {
-      throw new ForbiddenException("User role not found in authentication token");
+    if (user && user.role === "admin") {
+      return true;
     }
 
-    // 3. Verifica se o role do usuário está na lista de requiredRoles
-    const hasPermission = requiredRoles.some((role) => role === user.role);
-
-    if (!hasPermission) {
-      throw new ForbiddenException(`Access denied. Required role: ${requiredRoles.join(" or ")}`);
-    }
-
-    return hasPermission;
+    return requiredRoles.some((role) => user.role === role);
   }
 }
