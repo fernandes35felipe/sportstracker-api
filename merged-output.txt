@@ -1,0 +1,2926 @@
+# Code Merge Output
+Generated at: 2025-10-16T03:53:35.839Z
+Source path: .
+Files processed: 52
+Total lines: 2570
+Total characters: 64550
+
+File types:
+  - ts: 47 files (2.085 lines)
+  - json: 3 files (113 lines)
+  - md: 2 files (372 lines)
+
+Project structure & file index:
+./
+  - API_EXAMPLES.md (209 lines)
+  - nest-cli.json (8 lines)
+  - package.json (83 lines)
+  - README.md (163 lines)
+  - tsconfig.json (22 lines)
+  src/
+    - app.module.ts (32 lines)
+    - main.ts (28 lines)
+    common/
+      constants/
+        - index.ts (31 lines)
+      decorators/
+        - get-user.decorator.ts (10 lines)
+        - roles.decorator.ts (4 lines)
+      filters/
+        - http-exception.filter.ts (36 lines)
+      guards/
+        - roles.guard.ts (24 lines)
+      interceptors/
+        - logging.interceptor.ts (24 lines)
+      interfaces/
+        - index.ts (30 lines)
+      utils/
+        - helpers.ts (57 lines)
+    health/
+      - health.controller.ts (22 lines)
+      - health.module.ts (8 lines)
+    modules/
+      analytics/
+        - analytics.controller.ts (30 lines)
+        - analytics.module.ts (19 lines)
+        - analytics.service.ts (122 lines)
+      auth/
+        - auth.controller.ts (27 lines)
+        - auth.module.ts (30 lines)
+        - auth.service.ts (68 lines)
+        dto/
+          - login.dto.ts (10 lines)
+        guards/
+          - jwt-auth.guard.ts (5 lines)
+        strategies/
+          - jwt.strategy.ts (23 lines)
+      exercises/
+        - exercises.controller.ts (44 lines)
+        - exercises.module.ts (16 lines)
+        - exercises.service.ts (83 lines)
+        dto/
+          - create-exercise.dto.ts (41 lines)
+          - update-exercise.dto.ts (47 lines)
+        schemas/
+          - exercise.schema.ts (48 lines)
+      goals/
+        - goals.controller.ts (45 lines)
+        - goals.module.ts (16 lines)
+        - goals.service.ts (104 lines)
+        dto/
+          - create-goal.dto.ts (30 lines)
+          - update-goal.dto.ts (43 lines)
+        schemas/
+          - goal.schema.ts (45 lines)
+      users/
+        - users.controller.ts (52 lines)
+        - users.module.ts (16 lines)
+        - users.service.spec.ts (90 lines)
+        - users.service.ts (78 lines)
+        dto/
+          - create-user.dto.ts (40 lines)
+          - update-user.dto.ts (35 lines)
+        schemas/
+          - user.schema.ts (46 lines)
+      workouts/
+        - workouts.controller.ts (42 lines)
+        - workouts.module.ts (16 lines)
+        - workouts.service.ts (111 lines)
+        dto/
+          - create-workout.dto.ts (60 lines)
+          - update-workout.dto.ts (47 lines)
+        schemas/
+          - workout.schema.ts (65 lines)
+    scripts/
+      - seed.ts (185 lines)
+================================================================================
+
+STARTOFFILE: API_EXAMPLES.md
+----------------------------------------
+# Exemplos de Uso da API
+
+## Autenticação
+
+### Registro de Novo Usuário
+```bash
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+  "name": "João Silva",
+  "email": "joao@example.com",
+  "password": "senha123",
+  "role": "athlete"
+}
+```
+
+### Login
+```bash
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+  "email": "athlete@gmail.com",
+  "password": "athlete123"
+}
+```
+
+## Treinos
+
+### Criar Treino (Treinador)
+```bash
+POST http://localhost:3000/workouts
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "name": "Treino de Peito e Tríceps",
+  "description": "Treino focado em força para peitoral e tríceps",
+  "duration": "60 min",
+  "restTime": "90s",
+  "difficulty": "intermediate",
+  "category": "Força",
+  "exercises": [
+    {
+      "name": "Supino Reto",
+      "sets": 4,
+      "reps": "8-10",
+      "rest": "90s"
+    },
+    {
+      "name": "Supino Inclinado",
+      "sets": 3,
+      "reps": "10-12",
+      "rest": "60s"
+    }
+  ],
+  "assignedTo": ["<athlete_id>"],
+  "scheduledDate": "2025-10-20T10:00:00Z"
+}
+```
+
+### Listar Treinos
+```bash
+GET http://localhost:3000/workouts
+Authorization: Bearer <token>
+```
+
+### Marcar Treino como Completo
+```bash
+PATCH http://localhost:3000/workouts/<workout_id>/complete
+Authorization: Bearer <token>
+```
+
+## Exercícios
+
+### Criar Exercício Customizado
+```bash
+POST http://localhost:3000/exercises
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "name": "Flexão Diamante",
+  "description": "Variação de flexão focada em tríceps",
+  "category": "Força",
+  "difficulty": "intermediate",
+  "muscleGroups": ["Tríceps", "Peitoral"],
+  "equipment": "Nenhum",
+  "instructions": [
+    "Posicione as mãos próximas formando um diamante",
+    "Desça controladamente",
+    "Empurre para cima"
+  ],
+  "isCustom": true
+}
+```
+
+### Listar Exercícios
+```bash
+GET http://localhost:3000/exercises
+```
+
+### Buscar por Categoria
+```bash
+GET http://localhost:3000/exercises/category/Força
+```
+
+## Metas
+
+### Criar Meta
+```bash
+POST http://localhost:3000/goals
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "title": "Aumentar Supino para 100kg",
+  "description": "Meta de força para o próximo trimestre",
+  "category": "strength",
+  "priority": "high",
+  "target": 100,
+  "current": 80,
+  "unit": "kg",
+  "targetDate": "2025-12-31"
+}
+```
+
+### Listar Metas
+```bash
+GET http://localhost:3000/goals
+Authorization: Bearer <token>
+```
+
+### Atualizar Progresso
+```bash
+PATCH http://localhost:3000/goals/<goal_id>/progress
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "current": 85
+}
+```
+
+## Analytics
+
+### Estatísticas do Usuário
+```bash
+GET http://localhost:3000/analytics/stats
+Authorization: Bearer <token>
+```
+
+### Tendências de Treinos
+```bash
+GET http://localhost:3000/analytics/trends?days=30
+Authorization: Bearer <token>
+```
+
+### Progresso das Metas
+```bash
+GET http://localhost:3000/analytics/goals/progress
+Authorization: Bearer <token>
+```
+
+### Distribuição por Categoria
+```bash
+GET http://localhost:3000/analytics/categories
+Authorization: Bearer <token>
+```
+
+## Health Check
+
+### Status da API
+```bash
+GET http://localhost:3000/health
+```
+
+### Status do Banco de Dados
+```bash
+GET http://localhost:3000/health/db
+```
+
+## Usuários
+
+### Obter Perfil
+```bash
+GET http://localhost:3000/users/profile
+Authorization: Bearer <token>
+```
+
+### Atualizar Perfil
+```bash
+PATCH http://localhost:3000/users/<user_id>
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "weight": 78,
+  "height": 180,
+  "bio": "Atleta focado em hipertrofia"
+}
+```
+
+### Listar Atletas (Treinador)
+```bash
+GET http://localhost:3000/users/trainer/<trainer_id>/athletes
+Authorization: Bearer <token>
+```
+----------------------------------------
+ENDOFFILE: API_EXAMPLES.md
+
+STARTOFFILE: nest-cli.json
+----------------------------------------
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "src",
+  "compilerOptions": {
+    "deleteOutDir": true
+  }
+}
+----------------------------------------
+ENDOFFILE: nest-cli.json
+
+STARTOFFILE: package.json
+----------------------------------------
+{
+  "name": "sports-tracker-api",
+  "version": "1.0.0",
+  "description": "API Backend para sistema de acompanhamento esportivo",
+  "author": "",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "build": "nest build",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:debug": "nest start --debug --watch",
+    "start:prod": "node dist/main",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:e2e": "jest --config ./test/jest-e2e.json"
+  },
+  "dependencies": {
+    "@nestjs/common": "^10.3.0",
+    "@nestjs/core": "^10.3.0",
+    "@nestjs/config": "^3.1.1",
+    "@nestjs/platform-express": "^10.3.0",
+    "@nestjs/mongoose": "^10.0.2",
+    "@nestjs/jwt": "^10.2.0",
+    "@nestjs/passport": "^10.0.3",
+    "mongoose": "^8.0.3",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
+    "passport-local": "^1.0.0",
+    "bcrypt": "^5.1.1",
+    "class-validator": "^0.14.0",
+    "class-transformer": "^0.5.1",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^10.2.1",
+    "@nestjs/schematics": "^10.0.3",
+    "@nestjs/testing": "^10.3.0",
+    "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.11",
+    "@types/node": "^20.10.6",
+    "@types/supertest": "^6.0.2",
+    "@types/passport-jwt": "^4.0.0",
+    "@types/passport-local": "^1.0.38",
+    "@types/bcrypt": "^5.0.2",
+    "@typescript-eslint/eslint-plugin": "^6.17.0",
+    "@typescript-eslint/parser": "^6.17.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.2",
+    "jest": "^29.7.0",
+    "prettier": "^3.1.1",
+    "source-map-support": "^0.5.21",
+    "supertest": "^6.3.3",
+    "ts-jest": "^29.1.1",
+    "ts-loader": "^9.5.1",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.3.3"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": "src",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverageFrom": [
+      "**/*.(t|j)s"
+    ],
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node"
+  }
+}
+----------------------------------------
+ENDOFFILE: package.json
+
+STARTOFFILE: README.md
+----------------------------------------
+# Sports Tracker API
+
+API Backend para sistema de acompanhamento esportivo desenvolvida com NestJS, TypeScript e MongoDB.
+
+## 🚀 Tecnologias
+
+- **NestJS** - Framework Node.js
+- **TypeScript** - Linguagem de programação
+- **MongoDB** - Banco de dados NoSQL
+- **Mongoose** - ODM para MongoDB
+- **JWT** - Autenticação
+- **Passport** - Middleware de autenticação
+- **Bcrypt** - Hash de senhas
+
+## 📋 Pré-requisitos
+
+- Node.js (v18 ou superior)
+- MongoDB (v6 ou superior)
+- npm ou yarn
+
+## 🔧 Instalação
+
+1. Clone o repositório
+```bash
+git clone <repository-url>
+cd sports-tracker-api
+```
+
+2. Instale as dependências
+```bash
+npm install
+```
+
+3. Configure as variáveis de ambiente
+```bash
+cp .env.example .env
+```
+
+Edite o arquivo `.env` com suas configurações:
+```env
+PORT=3000
+NODE_ENV=development
+MONGODB_URI=mongodb://localhost:27017/sports-tracker
+JWT_SECRET=your-super-secret-jwt-key
+JWT_EXPIRES_IN=7d
+```
+
+4. Inicie o MongoDB
+```bash
+mongod
+```
+
+5. Execute a aplicação
+```bash
+npm run start:dev
+```
+
+A API estará disponível em `http://localhost:3000`
+
+## 📚 Estrutura do Projeto
+
+```
+src/
+├── modules/
+│   ├── auth/           # Autenticação e autorização
+│   ├── users/          # Gerenciamento de usuários
+│   ├── workouts/       # Treinos
+│   ├── exercises/      # Biblioteca de exercícios
+│   ├── goals/          # Metas dos usuários
+│   └── analytics/      # Estatísticas e análises
+├── app.module.ts       # Módulo raiz
+└── main.ts            # Entrada da aplicação
+```
+
+## 🔑 Endpoints
+
+### Autenticação
+
+- `POST /auth/register` - Registrar novo usuário
+- `POST /auth/login` - Login de usuário
+- `POST /auth/validate` - Validar token JWT
+
+### Usuários
+
+- `GET /users` - Listar todos os usuários
+- `GET /users/profile` - Obter perfil do usuário logado
+- `GET /users/:id` - Obter usuário por ID
+- `PATCH /users/:id` - Atualizar usuário
+- `DELETE /users/:id` - Remover usuário
+- `GET /users/trainer/:trainerId/athletes` - Listar atletas de um treinador
+
+### Treinos
+
+- `POST /workouts` - Criar novo treino
+- `GET /workouts` - Listar treinos do usuário
+- `GET /workouts/:id` - Obter treino por ID
+- `PATCH /workouts/:id` - Atualizar treino
+- `DELETE /workouts/:id` - Remover treino
+- `PATCH /workouts/:id/complete` - Marcar treino como completo
+
+### Exercícios
+
+- `POST /exercises` - Criar novo exercício
+- `GET /exercises` - Listar exercícios
+- `GET /exercises/:id` - Obter exercício por ID
+- `GET /exercises/category/:category` - Listar exercícios por categoria
+- `PATCH /exercises/:id` - Atualizar exercício
+- `DELETE /exercises/:id` - Remover exercício
+
+### Metas
+
+- `POST /goals` - Criar nova meta
+- `GET /goals` - Listar metas do usuário
+- `GET /goals?status=active` - Filtrar metas por status
+- `GET /goals/:id` - Obter meta por ID
+- `PATCH /goals/:id` - Atualizar meta
+- `DELETE /goals/:id` - Remover meta
+- `PATCH /goals/:id/progress` - Atualizar progresso da meta
+
+### Analytics
+
+- `GET /analytics/stats` - Estatísticas gerais do usuário
+- `GET /analytics/trends?days=30` - Tendências de treinos
+- `GET /analytics/goals/progress` - Progresso das metas
+- `GET /analytics/categories` - Distribuição por categoria
+
+## 🔐 Autenticação
+
+A API utiliza JWT (JSON Web Tokens) para autenticação. Após o login, inclua o token no header das requisições:
+
+```
+Authorization: Bearer <seu-token>
+```
+
+## 👥 Tipos de Usuário
+
+- **athlete** - Atleta (pode visualizar e completar treinos)
+- **trainer** - Treinador (pode criar e atribuir treinos)
+
+## 🧪 Testes
+
+```bash
+npm run test
+npm run test:watch
+npm run test:cov
+```
+
+## 📦 Build
+
+```bash
+npm run build
+npm run start:prod
+```
+
+## 🐳 Docker (Opcional)
+
+```bash
+docker-compose up -d
+```
+
+## 📝 Licença
+
+MIT
+----------------------------------------
+ENDOFFILE: README.md
+
+STARTOFFILE: src\app.module.ts
+----------------------------------------
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MongooseModule } from '@nestjs/mongoose';
+
+import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
+import { WorkoutsModule } from './modules/workouts/workouts.module';
+import { ExercisesModule } from './modules/exercises/exercises.module';
+import { GoalsModule } from './modules/goals/goals.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        uri: configService.get<string>('MONGODB_URI'),
+      }),
+      inject: [ConfigService],
+    }),
+    AuthModule,
+    UsersModule,
+    WorkoutsModule,
+    ExercisesModule,
+    GoalsModule,
+    AnalyticsModule,
+  ],
+})
+export class AppModule {}
+----------------------------------------
+ENDOFFILE: src\app.module.ts
+
+STARTOFFILE: src\common\constants\index.ts
+----------------------------------------
+export const USER_ROLES = {
+  ATHLETE: 'athlete',
+  TRAINER: 'trainer',
+} as const;
+
+export const GOAL_CATEGORIES = {
+  STRENGTH: 'strength',
+  ENDURANCE: 'endurance',
+  BODY_COMPOSITION: 'body-composition',
+  SKILL: 'skill',
+} as const;
+
+export const GOAL_STATUS = {
+  ACTIVE: 'active',
+  COMPLETED: 'completed',
+  PAUSED: 'paused',
+} as const;
+
+export const WORKOUT_DIFFICULTY = {
+  BEGINNER: 'beginner',
+  INTERMEDIATE: 'intermediate',
+  ADVANCED: 'advanced',
+} as const;
+
+export const EXERCISE_CATEGORIES = {
+  STRENGTH: 'Força',
+  CARDIO: 'Cardio',
+  HIIT: 'HIIT',
+  FLEXIBILITY: 'Flexibilidade',
+  CORE: 'Core',
+} as const;
+----------------------------------------
+ENDOFFILE: src\common\constants\index.ts
+
+STARTOFFILE: src\common\decorators\get-user.decorator.ts
+----------------------------------------
+import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+
+export const GetUser = createParamDecorator(
+  (data: string | undefined, ctx: ExecutionContext) => {
+    const request = ctx.switchToHttp().getRequest();
+    const user = request.user;
+
+    return data ? user?.[data] : user;
+  },
+);
+----------------------------------------
+ENDOFFILE: src\common\decorators\get-user.decorator.ts
+
+STARTOFFILE: src\common\decorators\roles.decorator.ts
+----------------------------------------
+import { SetMetadata } from '@nestjs/common';
+
+export const ROLES_KEY = 'roles';
+export const Roles = (...roles: string[]) => SetMetadata(ROLES_KEY, roles);
+----------------------------------------
+ENDOFFILE: src\common\decorators\roles.decorator.ts
+
+STARTOFFILE: src\common\filters\http-exception.filter.ts
+----------------------------------------
+import { ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
+import { Request, Response } from 'express';
+
+@Catch()
+export class HttpExceptionFilter implements ExceptionFilter {
+  catch(exception: unknown, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse<Response>();
+    const request = ctx.getRequest<Request>();
+
+    const status =
+      exception instanceof HttpException
+        ? exception.getStatus()
+        : HttpStatus.INTERNAL_SERVER_ERROR;
+
+    const message =
+      exception instanceof HttpException
+        ? exception.getResponse()
+        : 'Internal server error';
+
+    const errorResponse = {
+      statusCode: status,
+      timestamp: new Date().toISOString(),
+      path: request.url,
+      method: request.method,
+      message: typeof message === 'string' ? message : (message as any).message || message,
+    };
+
+    console.error('Error:', {
+      ...errorResponse,
+      stack: exception instanceof Error ? exception.stack : undefined,
+    });
+
+    response.status(status).json(errorResponse);
+  }
+}
+----------------------------------------
+ENDOFFILE: src\common\filters\http-exception.filter.ts
+
+STARTOFFILE: src\common\guards\roles.guard.ts
+----------------------------------------
+import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+
+import { ROLES_KEY } from '../decorators/roles.decorator';
+
+@Injectable()
+export class RolesGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+
+  canActivate(context: ExecutionContext): boolean {
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>(ROLES_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+
+    if (!requiredRoles) {
+      return true;
+    }
+
+    const { user } = context.switchToHttp().getRequest();
+    
+    return requiredRoles.some((role) => user.role === role);
+  }
+}
+----------------------------------------
+ENDOFFILE: src\common\guards\roles.guard.ts
+
+STARTOFFILE: src\common\interceptors\logging.interceptor.ts
+----------------------------------------
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from '@nestjs/common';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
+
+@Injectable()
+export class LoggingInterceptor implements NestInterceptor {
+  private readonly logger = new Logger('HTTP');
+
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const request = context.switchToHttp().getRequest();
+    const { method, url, body } = request;
+    const now = Date.now();
+
+    this.logger.log(`Incoming Request: ${method} ${url}`);
+
+    return next.handle().pipe(
+      tap(() => {
+        const response = context.switchToHttp().getResponse();
+        const delay = Date.now() - now;
+        this.logger.log(`Response: ${method} ${url} ${response.statusCode} - ${delay}ms`);
+      }),
+    );
+  }
+}
+----------------------------------------
+ENDOFFILE: src\common\interceptors\logging.interceptor.ts
+
+STARTOFFILE: src\common\interfaces\index.ts
+----------------------------------------
+export interface JwtPayload {
+  email: string;
+  sub: string;
+  role: string;
+}
+
+export interface RequestWithUser extends Request {
+  user: {
+    userId: string;
+    email: string;
+    role: string;
+  };
+}
+
+export interface PaginationQuery {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+----------------------------------------
+ENDOFFILE: src\common\interfaces\index.ts
+
+STARTOFFILE: src\common\utils\helpers.ts
+----------------------------------------
+import { PaginationQuery, PaginatedResponse } from '../interfaces';
+
+export function paginate<T>(
+  data: T[],
+  total: number,
+  query: PaginationQuery,
+): PaginatedResponse<T> {
+  const page = query.page || 1;
+  const limit = query.limit || 10;
+  const totalPages = Math.ceil(total / limit);
+
+  return {
+    data,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages,
+    },
+  };
+}
+
+export function generateSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+export function calculatePercentage(current: number, target: number): number {
+  if (target === 0) return 0;
+  return Math.min(100, Math.max(0, (current / target) * 100));
+}
+
+export function getDateRange(days: number): { start: Date; end: Date } {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(start.getDate() - days);
+
+  return { start, end };
+}
+
+export function formatDuration(seconds: number): string {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  }
+  if (minutes > 0) {
+    return `${minutes}m ${secs}s`;
+  }
+  return `${secs}s`;
+}
+----------------------------------------
+ENDOFFILE: src\common\utils\helpers.ts
+
+STARTOFFILE: src\health\health.controller.ts
+----------------------------------------
+import { Controller, Get } from '@nestjs/common';
+
+@Controller('health')
+export class HealthController {
+  @Get()
+  check() {
+    return {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || 'development',
+    };
+  }
+
+  @Get('db')
+  async checkDatabase() {
+    return {
+      status: 'ok',
+      database: 'connected',
+    };
+  }
+}
+----------------------------------------
+ENDOFFILE: src\health\health.controller.ts
+
+STARTOFFILE: src\health\health.module.ts
+----------------------------------------
+import { Module } from '@nestjs/common';
+
+import { HealthController } from './health.controller';
+
+@Module({
+  controllers: [HealthController],
+})
+export class HealthModule {}
+----------------------------------------
+ENDOFFILE: src\health\health.module.ts
+
+STARTOFFILE: src\main.ts
+----------------------------------------
+import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
+
+import { AppModule } from './app.module';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  app.enableCors({
+    origin: '*',
+    credentials: true,
+  });
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
+
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+  
+  console.log(`Application running on: http://localhost:${port}`);
+}
+
+bootstrap();
+----------------------------------------
+ENDOFFILE: src\main.ts
+
+STARTOFFILE: src\modules\analytics\analytics.controller.ts
+----------------------------------------
+import { Controller, Get, UseGuards, Request, Query } from '@nestjs/common';
+
+import { AnalyticsService } from './analytics.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+
+@Controller('analytics')
+@UseGuards(JwtAuthGuard)
+export class AnalyticsController {
+  constructor(private readonly analyticsService: AnalyticsService) {}
+
+  @Get('stats')
+  getUserStats(@Request() req) {
+    return this.analyticsService.getUserStats(req.user.userId);
+  }
+
+  @Get('trends')
+  getWorkoutTrends(@Request() req, @Query('days') days?: number) {
+    return this.analyticsService.getWorkoutTrends(req.user.userId, days ? parseInt(days.toString()) : 30);
+  }
+
+  @Get('goals/progress')
+  getGoalProgress(@Request() req) {
+    return this.analyticsService.getGoalProgress(req.user.userId);
+  }
+
+  @Get('categories')
+  getCategoryDistribution(@Request() req) {
+    return this.analyticsService.getCategoryDistribution(req.user.userId);
+  }
+}
+----------------------------------------
+ENDOFFILE: src\modules\analytics\analytics.controller.ts
+
+STARTOFFILE: src\modules\analytics\analytics.module.ts
+----------------------------------------
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+
+import { AnalyticsService } from './analytics.service';
+import { AnalyticsController } from './analytics.controller';
+import { Workout, WorkoutSchema } from '../workouts/schemas/workout.schema';
+import { Goal, GoalSchema } from '../goals/schemas/goal.schema';
+
+@Module({
+  imports: [
+    MongooseModule.forFeature([
+      { name: Workout.name, schema: WorkoutSchema },
+      { name: Goal.name, schema: GoalSchema },
+    ]),
+  ],
+  controllers: [AnalyticsController],
+  providers: [AnalyticsService],
+})
+export class AnalyticsModule {}
+----------------------------------------
+ENDOFFILE: src\modules\analytics\analytics.module.ts
+
+STARTOFFILE: src\modules\analytics\analytics.service.ts
+----------------------------------------
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+
+import { Workout, WorkoutDocument } from '../workouts/schemas/workout.schema';
+import { Goal, GoalDocument } from '../goals/schemas/goal.schema';
+
+@Injectable()
+export class AnalyticsService {
+  constructor(
+    @InjectModel(Workout.name) private workoutModel: Model<WorkoutDocument>,
+    @InjectModel(Goal.name) private goalModel: Model<GoalDocument>,
+  ) {}
+
+  async getUserStats(userId: string) {
+    const now = new Date();
+    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [
+      totalWorkouts,
+      completedWorkouts,
+      weekWorkouts,
+      monthWorkouts,
+      totalGoals,
+      completedGoals,
+      activeGoals,
+    ] = await Promise.all([
+      this.workoutModel.countDocuments({ assignedTo: userId }),
+      this.workoutModel.countDocuments({ assignedTo: userId, completed: true }),
+      this.workoutModel.countDocuments({
+        assignedTo: userId,
+        completed: true,
+        completedAt: { $gte: startOfWeek },
+      }),
+      this.workoutModel.countDocuments({
+        assignedTo: userId,
+        completed: true,
+        completedAt: { $gte: startOfMonth },
+      }),
+      this.goalModel.countDocuments({ userId }),
+      this.goalModel.countDocuments({ userId, status: 'completed' }),
+      this.goalModel.countDocuments({ userId, status: 'active' }),
+    ]);
+
+    return {
+      workouts: {
+        total: totalWorkouts,
+        completed: completedWorkouts,
+        thisWeek: weekWorkouts,
+        thisMonth: monthWorkouts,
+        completionRate: totalWorkouts > 0 ? (completedWorkouts / totalWorkouts) * 100 : 0,
+      },
+      goals: {
+        total: totalGoals,
+        completed: completedGoals,
+        active: activeGoals,
+        completionRate: totalGoals > 0 ? (completedGoals / totalGoals) * 100 : 0,
+      },
+    };
+  }
+
+  async getWorkoutTrends(userId: string, days: number = 30) {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const workouts = await this.workoutModel
+      .find({
+        assignedTo: userId,
+        completed: true,
+        completedAt: { $gte: startDate },
+      })
+      .sort({ completedAt: 1 })
+      .exec();
+
+    const dailyStats = workouts.reduce((acc, workout) => {
+      const date = new Date(workout.completedAt).toISOString().split('T')[0];
+      
+      if (!acc[date]) {
+        acc[date] = { count: 0, categories: {} };
+      }
+      
+      acc[date].count++;
+      acc[date].categories[workout.category] = (acc[date].categories[workout.category] || 0) + 1;
+      
+      return acc;
+    }, {});
+
+    return dailyStats;
+  }
+
+  async getGoalProgress(userId: string) {
+    const goals = await this.goalModel
+      .find({ userId, isActive: true })
+      .sort({ createdAt: -1 })
+      .exec();
+
+    return goals.map(goal => ({
+      id: goal._id,
+      title: goal.title,
+      category: goal.category,
+      progress: goal.target > 0 ? (goal.current / goal.target) * 100 : 0,
+      current: goal.current,
+      target: goal.target,
+      unit: goal.unit,
+      status: goal.status,
+    }));
+  }
+
+  async getCategoryDistribution(userId: string) {
+    const workouts = await this.workoutModel
+      .find({ assignedTo: userId, completed: true })
+      .exec();
+
+    const distribution = workouts.reduce((acc, workout) => {
+      acc[workout.category] = (acc[workout.category] || 0) + 1;
+      return acc;
+    }, {});
+
+    return distribution;
+  }
+}
+----------------------------------------
+ENDOFFILE: src\modules\analytics\analytics.service.ts
+
+STARTOFFILE: src\modules\auth\auth.controller.ts
+----------------------------------------
+import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
+
+import { AuthService } from './auth.service';
+import { LoginDto } from './dto/login.dto';
+import { CreateUserDto } from '../users/dto/create-user.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+
+@Controller('auth')
+export class AuthController {
+  constructor(private readonly authService: AuthService) {}
+
+  @Post('login')
+  login(@Body() loginDto: LoginDto) {
+    return this.authService.login(loginDto);
+  }
+
+  @Post('register')
+  register(@Body() createUserDto: CreateUserDto) {
+    return this.authService.register(createUserDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('validate')
+  validate(@Request() req) {
+    return { valid: true, user: req.user };
+  }
+}
+----------------------------------------
+ENDOFFILE: src\modules\auth\auth.controller.ts
+
+STARTOFFILE: src\modules\auth\auth.module.ts
+----------------------------------------
+import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+
+import { AuthService } from './auth.service';
+import { AuthController } from './auth.controller';
+import { UsersModule } from '../users/users.module';
+import { JwtStrategy } from './strategies/jwt.strategy';
+
+@Module({
+  imports: [
+    UsersModule,
+    PassportModule,
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: { 
+          expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '7d' 
+        },
+      }),
+      inject: [ConfigService],
+    }),
+  ],
+  controllers: [AuthController],
+  providers: [AuthService, JwtStrategy],
+  exports: [AuthService],
+})
+export class AuthModule {}
+----------------------------------------
+ENDOFFILE: src\modules\auth\auth.module.ts
+
+STARTOFFILE: src\modules\auth\auth.service.ts
+----------------------------------------
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+
+import { UsersService } from '../users/users.service';
+import { LoginDto } from './dto/login.dto';
+import { CreateUserDto } from '../users/dto/create-user.dto';
+
+@Injectable()
+export class AuthService {
+  constructor(
+    private usersService: UsersService,
+    private jwtService: JwtService,
+  ) {}
+
+  async validateUser(email: string, password: string): Promise<any> {
+    const user = await this.usersService.findByEmail(email);
+    
+    if (!user) {
+      return null;
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    
+    if (!isPasswordValid) {
+      return null;
+    }
+
+    const { password: _, ...result } = user.toObject();
+    return result;
+  }
+
+  async login(loginDto: LoginDto) {
+    const user = await this.validateUser(loginDto.email, loginDto.password);
+    
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const payload = { email: user.email, sub: user._id, role: user.role };
+    
+    return {
+      access_token: this.jwtService.sign(payload),
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    };
+  }
+
+  async register(createUserDto: CreateUserDto) {
+    const user = await this.usersService.create(createUserDto);
+    
+    const payload = { email: user.email, sub: user._id, role: user.role };
+    
+    return {
+      access_token: this.jwtService.sign(payload),
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    };
+  }
+}
+----------------------------------------
+ENDOFFILE: src\modules\auth\auth.service.ts
+
+STARTOFFILE: src\modules\auth\dto\login.dto.ts
+----------------------------------------
+import { IsEmail, IsString, MinLength } from 'class-validator';
+
+export class LoginDto {
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @MinLength(6)
+  password: string;
+}
+----------------------------------------
+ENDOFFILE: src\modules\auth\dto\login.dto.ts
+
+STARTOFFILE: src\modules\auth\guards\jwt-auth.guard.ts
+----------------------------------------
+import { Injectable } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
+
+@Injectable()
+export class JwtAuthGuard extends AuthGuard('jwt') {}
+----------------------------------------
+ENDOFFILE: src\modules\auth\guards\jwt-auth.guard.ts
+
+STARTOFFILE: src\modules\auth\strategies\jwt.strategy.ts
+----------------------------------------
+import { Injectable } from '@nestjs/common';
+import { PassportStrategy } from '@nestjs/passport';
+import { ExtractJwt, Strategy } from 'passport-jwt';
+import { ConfigService } from '@nestjs/config';
+
+@Injectable()
+export class JwtStrategy extends PassportStrategy(Strategy) {
+  constructor(private configService: ConfigService) {
+    super({
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: configService.get<string>('JWT_SECRET'),
+    });
+  }
+
+  async validate(payload: any) {
+    return { 
+      userId: payload.sub, 
+      email: payload.email, 
+      role: payload.role 
+    };
+  }
+}
+----------------------------------------
+ENDOFFILE: src\modules\auth\strategies\jwt.strategy.ts
+
+STARTOFFILE: src\modules\exercises\dto\create-exercise.dto.ts
+----------------------------------------
+import { IsString, IsEnum, IsArray, IsOptional, IsBoolean } from 'class-validator';
+
+export class CreateExerciseDto {
+  @IsString()
+  name: string;
+
+  @IsString()
+  description: string;
+
+  @IsString()
+  category: string;
+
+  @IsEnum(['beginner', 'intermediate', 'advanced'])
+  difficulty: string;
+
+  @IsArray()
+  muscleGroups: string[];
+
+  @IsString()
+  equipment: string;
+
+  @IsOptional()
+  @IsString()
+  videoUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @IsOptional()
+  @IsArray()
+  instructions?: string[];
+
+  @IsOptional()
+  @IsArray()
+  tips?: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  isCustom?: boolean;
+}
+----------------------------------------
+ENDOFFILE: src\modules\exercises\dto\create-exercise.dto.ts
+
+STARTOFFILE: src\modules\exercises\dto\update-exercise.dto.ts
+----------------------------------------
+import { IsString, IsEnum, IsArray, IsOptional, IsBoolean } from 'class-validator';
+
+export class UpdateExerciseDto {
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  category?: string;
+
+  @IsOptional()
+  @IsEnum(['beginner', 'intermediate', 'advanced'])
+  difficulty?: string;
+
+  @IsOptional()
+  @IsArray()
+  muscleGroups?: string[];
+
+  @IsOptional()
+  @IsString()
+  equipment?: string;
+
+  @IsOptional()
+  @IsString()
+  videoUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @IsOptional()
+  @IsArray()
+  instructions?: string[];
+
+  @IsOptional()
+  @IsArray()
+  tips?: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+}
+----------------------------------------
+ENDOFFILE: src\modules\exercises\dto\update-exercise.dto.ts
+
+STARTOFFILE: src\modules\exercises\exercises.controller.ts
+----------------------------------------
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query } from '@nestjs/common';
+
+import { ExercisesService } from './exercises.service';
+import { CreateExerciseDto } from './dto/create-exercise.dto';
+import { UpdateExerciseDto } from './dto/update-exercise.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+
+@Controller('exercises')
+export class ExercisesController {
+  constructor(private readonly exercisesService: ExercisesService) {}
+
+  @UseGuards(JwtAuthGuard)
+  @Post()
+  create(@Body() createExerciseDto: CreateExerciseDto, @Request() req) {
+    return this.exercisesService.create(createExerciseDto, req.user.userId);
+  }
+
+  @Get()
+  findAll(@Query('userId') userId?: string) {
+    return this.exercisesService.findAll(userId);
+  }
+
+  @Get('category/:category')
+  findByCategory(@Param('category') category: string, @Query('userId') userId?: string) {
+    return this.exercisesService.findByCategory(category, userId);
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.exercisesService.findOne(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateExerciseDto: UpdateExerciseDto) {
+    return this.exercisesService.update(id, updateExerciseDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.exercisesService.remove(id);
+  }
+}
+----------------------------------------
+ENDOFFILE: src\modules\exercises\exercises.controller.ts
+
+STARTOFFILE: src\modules\exercises\exercises.module.ts
+----------------------------------------
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+
+import { ExercisesService } from './exercises.service';
+import { ExercisesController } from './exercises.controller';
+import { Exercise, ExerciseSchema } from './schemas/exercise.schema';
+
+@Module({
+  imports: [
+    MongooseModule.forFeature([{ name: Exercise.name, schema: ExerciseSchema }]),
+  ],
+  controllers: [ExercisesController],
+  providers: [ExercisesService],
+  exports: [ExercisesService],
+})
+export class ExercisesModule {}
+----------------------------------------
+ENDOFFILE: src\modules\exercises\exercises.module.ts
+
+STARTOFFILE: src\modules\exercises\exercises.service.ts
+----------------------------------------
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+
+import { Exercise, ExerciseDocument } from './schemas/exercise.schema';
+import { CreateExerciseDto } from './dto/create-exercise.dto';
+import { UpdateExerciseDto } from './dto/update-exercise.dto';
+
+@Injectable()
+export class ExercisesService {
+  constructor(
+    @InjectModel(Exercise.name) private exerciseModel: Model<ExerciseDocument>,
+  ) {}
+
+  async create(createExerciseDto: CreateExerciseDto, userId?: string): Promise<Exercise> {
+    const createdExercise = new this.exerciseModel({
+      ...createExerciseDto,
+      createdBy: userId,
+    });
+
+    return createdExercise.save();
+  }
+
+  async findAll(userId?: string): Promise<Exercise[]> {
+    const query: any = { isActive: true };
+    
+    if (userId) {
+      query.$or = [
+        { isCustom: false },
+        { isCustom: true, createdBy: userId }
+      ];
+    } else {
+      query.isCustom = false;
+    }
+
+    return this.exerciseModel.find(query).exec();
+  }
+
+  async findOne(id: string): Promise<Exercise> {
+    const exercise = await this.exerciseModel.findById(id).exec();
+    
+    if (!exercise) {
+      throw new NotFoundException('Exercise not found');
+    }
+
+    return exercise;
+  }
+
+  async findByCategory(category: string, userId?: string): Promise<Exercise[]> {
+    const query: any = { category, isActive: true };
+    
+    if (userId) {
+      query.$or = [
+        { isCustom: false },
+        { isCustom: true, createdBy: userId }
+      ];
+    } else {
+      query.isCustom = false;
+    }
+
+    return this.exerciseModel.find(query).exec();
+  }
+
+  async update(id: string, updateExerciseDto: UpdateExerciseDto): Promise<Exercise> {
+    const exercise = await this.exerciseModel
+      .findByIdAndUpdate(id, updateExerciseDto, { new: true })
+      .exec();
+
+    if (!exercise) {
+      throw new NotFoundException('Exercise not found');
+    }
+
+    return exercise;
+  }
+
+  async remove(id: string): Promise<void> {
+    const result = await this.exerciseModel.findByIdAndDelete(id).exec();
+    
+    if (!result) {
+      throw new NotFoundException('Exercise not found');
+    }
+  }
+}
+----------------------------------------
+ENDOFFILE: src\modules\exercises\exercises.service.ts
+
+STARTOFFILE: src\modules\exercises\schemas\exercise.schema.ts
+----------------------------------------
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, Types } from 'mongoose';
+
+export type ExerciseDocument = Exercise & Document;
+
+@Schema({ timestamps: true })
+export class Exercise {
+  @Prop({ required: true })
+  name: string;
+
+  @Prop({ required: true })
+  description: string;
+
+  @Prop({ required: true })
+  category: string;
+
+  @Prop({ enum: ['beginner', 'intermediate', 'advanced'], default: 'intermediate' })
+  difficulty: string;
+
+  @Prop({ type: [String], default: [] })
+  muscleGroups: string[];
+
+  @Prop({ required: true })
+  equipment: string;
+
+  @Prop()
+  videoUrl?: string;
+
+  @Prop()
+  imageUrl?: string;
+
+  @Prop({ type: [String], default: [] })
+  instructions: string[];
+
+  @Prop({ type: [String], default: [] })
+  tips: string[];
+
+  @Prop({ type: Types.ObjectId, ref: 'User' })
+  createdBy?: Types.ObjectId;
+
+  @Prop({ default: false })
+  isCustom: boolean;
+
+  @Prop({ default: true })
+  isActive: boolean;
+}
+
+export const ExerciseSchema = SchemaFactory.createForClass(Exercise);
+----------------------------------------
+ENDOFFILE: src\modules\exercises\schemas\exercise.schema.ts
+
+STARTOFFILE: src\modules\goals\dto\create-goal.dto.ts
+----------------------------------------
+import { IsString, IsEnum, IsNumber, IsOptional, IsDateString } from 'class-validator';
+
+export class CreateGoalDto {
+  @IsString()
+  title: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsEnum(['strength', 'endurance', 'body-composition', 'skill'])
+  category: string;
+
+  @IsEnum(['low', 'medium', 'high'])
+  priority: string;
+
+  @IsNumber()
+  target: number;
+
+  @IsOptional()
+  @IsNumber()
+  current?: number;
+
+  @IsString()
+  unit: string;
+
+  @IsOptional()
+  @IsDateString()
+  targetDate?: string;
+}
+----------------------------------------
+ENDOFFILE: src\modules\goals\dto\create-goal.dto.ts
+
+STARTOFFILE: src\modules\goals\dto\update-goal.dto.ts
+----------------------------------------
+import { IsString, IsEnum, IsNumber, IsOptional, IsDateString, IsBoolean } from 'class-validator';
+
+export class UpdateGoalDto {
+  @IsOptional()
+  @IsString()
+  title?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsEnum(['strength', 'endurance', 'body-composition', 'skill'])
+  category?: string;
+
+  @IsOptional()
+  @IsEnum(['low', 'medium', 'high'])
+  priority?: string;
+
+  @IsOptional()
+  @IsNumber()
+  target?: number;
+
+  @IsOptional()
+  @IsNumber()
+  current?: number;
+
+  @IsOptional()
+  @IsString()
+  unit?: string;
+
+  @IsOptional()
+  @IsDateString()
+  targetDate?: string;
+
+  @IsOptional()
+  @IsEnum(['active', 'completed', 'paused'])
+  status?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+}
+----------------------------------------
+ENDOFFILE: src\modules\goals\dto\update-goal.dto.ts
+
+STARTOFFILE: src\modules\goals\goals.controller.ts
+----------------------------------------
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, Query } from '@nestjs/common';
+
+import { GoalsService } from './goals.service';
+import { CreateGoalDto } from './dto/create-goal.dto';
+import { UpdateGoalDto } from './dto/update-goal.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+
+@Controller('goals')
+@UseGuards(JwtAuthGuard)
+export class GoalsController {
+  constructor(private readonly goalsService: GoalsService) {}
+
+  @Post()
+  create(@Body() createGoalDto: CreateGoalDto, @Request() req) {
+    return this.goalsService.create(createGoalDto, req.user.userId);
+  }
+
+  @Get()
+  findAll(@Request() req, @Query('status') status?: string) {
+    if (status) {
+      return this.goalsService.findByStatus(req.user.userId, status);
+    }
+    return this.goalsService.findAll(req.user.userId);
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string, @Request() req) {
+    return this.goalsService.findOne(id, req.user.userId);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateGoalDto: UpdateGoalDto, @Request() req) {
+    return this.goalsService.update(id, updateGoalDto, req.user.userId);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string, @Request() req) {
+    return this.goalsService.remove(id, req.user.userId);
+  }
+
+  @Patch(':id/progress')
+  updateProgress(@Param('id') id: string, @Body('current') current: number, @Request() req) {
+    return this.goalsService.updateProgress(id, current, req.user.userId);
+  }
+}
+----------------------------------------
+ENDOFFILE: src\modules\goals\goals.controller.ts
+
+STARTOFFILE: src\modules\goals\goals.module.ts
+----------------------------------------
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+
+import { GoalsService } from './goals.service';
+import { GoalsController } from './goals.controller';
+import { Goal, GoalSchema } from './schemas/goal.schema';
+
+@Module({
+  imports: [
+    MongooseModule.forFeature([{ name: Goal.name, schema: GoalSchema }]),
+  ],
+  controllers: [GoalsController],
+  providers: [GoalsService],
+  exports: [GoalsService],
+})
+export class GoalsModule {}
+----------------------------------------
+ENDOFFILE: src\modules\goals\goals.module.ts
+
+STARTOFFILE: src\modules\goals\goals.service.ts
+----------------------------------------
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+
+import { Goal, GoalDocument } from './schemas/goal.schema';
+import { CreateGoalDto } from './dto/create-goal.dto';
+import { UpdateGoalDto } from './dto/update-goal.dto';
+
+@Injectable()
+export class GoalsService {
+  constructor(
+    @InjectModel(Goal.name) private goalModel: Model<GoalDocument>,
+  ) {}
+
+  async create(createGoalDto: CreateGoalDto, userId: string): Promise<Goal> {
+    const createdGoal = new this.goalModel({
+      ...createGoalDto,
+      userId,
+    });
+
+    return createdGoal.save();
+  }
+
+  async findAll(userId: string): Promise<Goal[]> {
+    return this.goalModel
+      .find({ userId, isActive: true })
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+
+  async findOne(id: string, userId: string): Promise<Goal> {
+    const goal = await this.goalModel.findById(id).exec();
+
+    if (!goal) {
+      throw new NotFoundException('Goal not found');
+    }
+
+    if (goal.userId.toString() !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    return goal;
+  }
+
+  async update(id: string, updateGoalDto: UpdateGoalDto, userId: string): Promise<Goal> {
+    const goal = await this.goalModel.findById(id);
+
+    if (!goal) {
+      throw new NotFoundException('Goal not found');
+    }
+
+    if (goal.userId.toString() !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    const updatedGoal = await this.goalModel
+      .findByIdAndUpdate(id, updateGoalDto, { new: true })
+      .exec();
+
+    return updatedGoal;
+  }
+
+  async remove(id: string, userId: string): Promise<void> {
+    const goal = await this.goalModel.findById(id);
+
+    if (!goal) {
+      throw new NotFoundException('Goal not found');
+    }
+
+    if (goal.userId.toString() !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    await this.goalModel.findByIdAndDelete(id).exec();
+  }
+
+  async updateProgress(id: string, current: number, userId: string): Promise<Goal> {
+    const goal = await this.goalModel.findById(id);
+
+    if (!goal) {
+      throw new NotFoundException('Goal not found');
+    }
+
+    if (goal.userId.toString() !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    goal.current = current;
+
+    if (current >= goal.target) {
+      goal.status = 'completed';
+      goal.completedAt = new Date();
+    }
+
+    return goal.save();
+  }
+
+  async findByStatus(userId: string, status: string): Promise<Goal[]> {
+    return this.goalModel
+      .find({ userId, status, isActive: true })
+      .sort({ createdAt: -1 })
+      .exec();
+  }
+}
+----------------------------------------
+ENDOFFILE: src\modules\goals\goals.service.ts
+
+STARTOFFILE: src\modules\goals\schemas\goal.schema.ts
+----------------------------------------
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, Types } from 'mongoose';
+
+export type GoalDocument = Goal & Document;
+
+@Schema({ timestamps: true })
+export class Goal {
+  @Prop({ required: true })
+  title: string;
+
+  @Prop()
+  description?: string;
+
+  @Prop({ enum: ['strength', 'endurance', 'body-composition', 'skill'], required: true })
+  category: string;
+
+  @Prop({ enum: ['low', 'medium', 'high'], default: 'medium' })
+  priority: string;
+
+  @Prop({ required: true })
+  target: number;
+
+  @Prop({ default: 0 })
+  current: number;
+
+  @Prop({ required: true })
+  unit: string;
+
+  @Prop()
+  targetDate?: Date;
+
+  @Prop({ enum: ['active', 'completed', 'paused'], default: 'active' })
+  status: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  userId: Types.ObjectId;
+
+  @Prop()
+  completedAt?: Date;
+
+  @Prop({ default: true })
+  isActive: boolean;
+}
+
+export const GoalSchema = SchemaFactory.createForClass(Goal);
+----------------------------------------
+ENDOFFILE: src\modules\goals\schemas\goal.schema.ts
+
+STARTOFFILE: src\modules\users\dto\create-user.dto.ts
+----------------------------------------
+import { IsEmail, IsString, IsEnum, IsOptional, MinLength, IsNumber, IsArray } from 'class-validator';
+
+export class CreateUserDto {
+  @IsString()
+  name: string;
+
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @MinLength(6)
+  password: string;
+
+  @IsEnum(['athlete', 'trainer'])
+  role: string;
+
+  @IsOptional()
+  @IsString()
+  bio?: string;
+
+  @IsOptional()
+  @IsString()
+  avatar?: string;
+
+  @IsOptional()
+  @IsNumber()
+  weight?: number;
+
+  @IsOptional()
+  @IsNumber()
+  height?: number;
+
+  @IsOptional()
+  @IsNumber()
+  age?: number;
+
+  @IsOptional()
+  @IsArray()
+  goals?: string[];
+}
+----------------------------------------
+ENDOFFILE: src\modules\users\dto\create-user.dto.ts
+
+STARTOFFILE: src\modules\users\dto\update-user.dto.ts
+----------------------------------------
+import { IsString, IsOptional, IsNumber, IsArray, IsBoolean } from 'class-validator';
+
+export class UpdateUserDto {
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  bio?: string;
+
+  @IsOptional()
+  @IsString()
+  avatar?: string;
+
+  @IsOptional()
+  @IsNumber()
+  weight?: number;
+
+  @IsOptional()
+  @IsNumber()
+  height?: number;
+
+  @IsOptional()
+  @IsNumber()
+  age?: number;
+
+  @IsOptional()
+  @IsArray()
+  goals?: string[];
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+}
+----------------------------------------
+ENDOFFILE: src\modules\users\dto\update-user.dto.ts
+
+STARTOFFILE: src\modules\users\schemas\user.schema.ts
+----------------------------------------
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document } from 'mongoose';
+
+export type UserDocument = User & Document;
+
+@Schema({ timestamps: true })
+export class User {
+  @Prop({ required: true })
+  name: string;
+
+  @Prop({ required: true, unique: true })
+  email: string;
+
+  @Prop({ required: true })
+  password: string;
+
+  @Prop({ required: true, enum: ['athlete', 'trainer'], default: 'athlete' })
+  role: string;
+
+  @Prop()
+  bio?: string;
+
+  @Prop()
+  avatar?: string;
+
+  @Prop()
+  weight?: number;
+
+  @Prop()
+  height?: number;
+
+  @Prop()
+  age?: number;
+
+  @Prop({ type: [String], default: [] })
+  goals?: string[];
+
+  @Prop({ type: [String], default: [] })
+  athletes?: string[];
+
+  @Prop({ default: true })
+  isActive: boolean;
+  _id: any;
+}
+
+export const UserSchema = SchemaFactory.createForClass(User);
+----------------------------------------
+ENDOFFILE: src\modules\users\schemas\user.schema.ts
+
+STARTOFFILE: src\modules\users\users.controller.ts
+----------------------------------------
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+
+import { UsersService } from './users.service';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+
+@Controller('users')
+export class UsersController {
+  constructor(private readonly usersService: UsersService) {}
+
+  @Post()
+  create(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.create(createUserDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  findAll() {
+    return this.usersService.findAll();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('profile')
+  getProfile(@Request() req) {
+    return this.usersService.findOne(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.usersService.findOne(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    return this.usersService.update(id, updateUserDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.usersService.remove(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('trainer/:trainerId/athletes')
+  findAthletesByTrainer(@Param('trainerId') trainerId: string) {
+    return this.usersService.findAthletesByTrainer(trainerId);
+  }
+}
+----------------------------------------
+ENDOFFILE: src\modules\users\users.controller.ts
+
+STARTOFFILE: src\modules\users\users.module.ts
+----------------------------------------
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+
+import { UsersService } from './users.service';
+import { UsersController } from './users.controller';
+import { User, UserSchema } from './schemas/user.schema';
+
+@Module({
+  imports: [
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+  ],
+  controllers: [UsersController],
+  providers: [UsersService],
+  exports: [UsersService],
+})
+export class UsersModule {}
+----------------------------------------
+ENDOFFILE: src\modules\users\users.module.ts
+
+STARTOFFILE: src\modules\users\users.service.spec.ts
+----------------------------------------
+import { Test, TestingModule } from '@nestjs/testing';
+import { getModelToken } from '@nestjs/mongoose';
+import { ConflictException, NotFoundException } from '@nestjs/common';
+
+import { UsersService } from './users.service';
+import { User } from './schemas/user.schema';
+
+describe('UsersService', () => {
+  let service: UsersService;
+  let mockUserModel: any;
+
+  const mockUser = {
+    _id: '507f1f77bcf86cd799439011',
+    name: 'Test User',
+    email: 'test@example.com',
+    role: 'athlete',
+    password: 'hashedPassword',
+    save: jest.fn().mockResolvedValue(this),
+    toObject: jest.fn().mockReturnValue({
+      _id: '507f1f77bcf86cd799439011',
+      name: 'Test User',
+      email: 'test@example.com',
+      role: 'athlete',
+    }),
+  };
+
+  beforeEach(async () => {
+    mockUserModel = {
+      new: jest.fn().mockResolvedValue(mockUser),
+      constructor: jest.fn().mockResolvedValue(mockUser),
+      find: jest.fn(),
+      findOne: jest.fn(),
+      findById: jest.fn(),
+      findByIdAndUpdate: jest.fn(),
+      findByIdAndDelete: jest.fn(),
+      exec: jest.fn(),
+      select: jest.fn(),
+    };
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        UsersService,
+        {
+          provide: getModelToken(User.name),
+          useValue: mockUserModel,
+        },
+      ],
+    }).compile();
+
+    service = module.get<UsersService>(UsersService);
+  });
+
+  it('should be defined', () => {
+    expect(service).toBeDefined();
+  });
+
+  describe('findOne', () => {
+    it('should return a user by id', async () => {
+      mockUserModel.findById.mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue(mockUser),
+        }),
+      });
+
+      const result = await service.findOne('507f1f77bcf86cd799439011');
+      expect(result).toEqual(mockUser);
+    });
+
+    it('should throw NotFoundException when user not found', async () => {
+      mockUserModel.findById.mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue(null),
+        }),
+      });
+
+      await expect(service.findOne('nonexistent')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('findByEmail', () => {
+    it('should return a user by email', async () => {
+      mockUserModel.findOne.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockUser),
+      });
+
+      const result = await service.findByEmail('test@example.com');
+      expect(result).toEqual(mockUser);
+    });
+  });
+});
+----------------------------------------
+ENDOFFILE: src\modules\users\users.service.spec.ts
+
+STARTOFFILE: src\modules\users\users.service.ts
+----------------------------------------
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import * as bcrypt from 'bcrypt';
+
+import { User, UserDocument } from './schemas/user.schema';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+
+@Injectable()
+export class UsersService {
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+  ) {}
+
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    const existingUser = await this.userModel.findOne({ email: createUserDto.email });
+    
+    if (existingUser) {
+      throw new ConflictException('Email already exists');
+    }
+
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+    
+    const createdUser = new this.userModel({
+      ...createUserDto,
+      password: hashedPassword,
+    });
+
+    return createdUser.save();
+  }
+
+  async findAll(): Promise<User[]> {
+    return this.userModel.find().select('-password').exec();
+  }
+
+  async findOne(id: string): Promise<User> {
+    const user = await this.userModel.findById(id).select('-password').exec();
+    
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
+  }
+
+  async findByEmail(email: string): Promise<UserDocument> {
+    return this.userModel.findOne({ email }).exec();
+  }
+
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+    const user = await this.userModel
+      .findByIdAndUpdate(id, updateUserDto, { new: true })
+      .select('-password')
+      .exec();
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
+  }
+
+  async remove(id: string): Promise<void> {
+    const result = await this.userModel.findByIdAndDelete(id).exec();
+    
+    if (!result) {
+      throw new NotFoundException('User not found');
+    }
+  }
+
+  async findAthletesByTrainer(trainerId: string): Promise<User[]> {
+    return this.userModel
+      .find({ role: 'athlete', trainers: trainerId })
+      .select('-password')
+      .exec();
+  }
+}
+----------------------------------------
+ENDOFFILE: src\modules\users\users.service.ts
+
+STARTOFFILE: src\modules\workouts\dto\create-workout.dto.ts
+----------------------------------------
+import { IsString, IsArray, IsOptional, IsEnum, ValidateNested, IsDateString, IsBoolean } from 'class-validator';
+import { Type } from 'class-transformer';
+
+class ExerciseItemDto {
+  @IsString()
+  name: string;
+
+  @IsString()
+  sets: number;
+
+  @IsString()
+  reps: string;
+
+  @IsOptional()
+  @IsString()
+  rest?: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+}
+
+export class CreateWorkoutDto {
+  @IsString()
+  name: string;
+
+  @IsString()
+  description: string;
+
+  @IsOptional()
+  @IsString()
+  duration?: string;
+
+  @IsOptional()
+  @IsString()
+  restTime?: string;
+
+  @IsEnum(['beginner', 'intermediate', 'advanced'])
+  difficulty: string;
+
+  @IsString()
+  category: string;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => ExerciseItemDto)
+  exercises: ExerciseItemDto[];
+
+  @IsOptional()
+  @IsArray()
+  assignedTo?: string[];
+
+  @IsOptional()
+  @IsDateString()
+  scheduledDate?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  completed?: boolean;
+}
+----------------------------------------
+ENDOFFILE: src\modules\workouts\dto\create-workout.dto.ts
+
+STARTOFFILE: src\modules\workouts\dto\update-workout.dto.ts
+----------------------------------------
+import { IsString, IsArray, IsOptional, IsEnum, IsBoolean, IsDateString } from 'class-validator';
+
+export class UpdateWorkoutDto {
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  duration?: string;
+
+  @IsOptional()
+  @IsString()
+  restTime?: string;
+
+  @IsOptional()
+  @IsEnum(['beginner', 'intermediate', 'advanced'])
+  difficulty?: string;
+
+  @IsOptional()
+  @IsString()
+  category?: string;
+
+  @IsOptional()
+  @IsArray()
+  exercises?: any[];
+
+  @IsOptional()
+  @IsArray()
+  assignedTo?: string[];
+
+  @IsOptional()
+  @IsDateString()
+  scheduledDate?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  completed?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+}
+----------------------------------------
+ENDOFFILE: src\modules\workouts\dto\update-workout.dto.ts
+
+STARTOFFILE: src\modules\workouts\schemas\workout.schema.ts
+----------------------------------------
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, Types } from 'mongoose';
+
+export type WorkoutDocument = Workout & Document;
+
+class ExerciseItem {
+  @Prop({ required: true })
+  name: string;
+
+  @Prop({ required: true })
+  sets: number;
+
+  @Prop({ required: true })
+  reps: string;
+
+  @Prop()
+  rest?: string;
+
+  @Prop()
+  notes?: string;
+}
+
+@Schema({ timestamps: true })
+export class Workout {
+  @Prop({ required: true })
+  name: string;
+
+  @Prop({ required: true })
+  description: string;
+
+  @Prop()
+  duration?: string;
+
+  @Prop()
+  restTime?: string;
+
+  @Prop({ enum: ['beginner', 'intermediate', 'advanced'], default: 'intermediate' })
+  difficulty: string;
+
+  @Prop({ required: true })
+  category: string;
+
+  @Prop({ type: [ExerciseItem], default: [] })
+  exercises: ExerciseItem[];
+
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  createdBy: Types.ObjectId;
+
+  @Prop({ type: [Types.ObjectId], ref: 'User', default: [] })
+  assignedTo: Types.ObjectId[];
+
+  @Prop()
+  scheduledDate?: Date;
+
+  @Prop({ default: false })
+  completed: boolean;
+
+  @Prop()
+  completedAt?: Date;
+
+  @Prop({ default: true })
+  isActive: boolean;
+}
+
+export const WorkoutSchema = SchemaFactory.createForClass(Workout);
+----------------------------------------
+ENDOFFILE: src\modules\workouts\schemas\workout.schema.ts
+
+STARTOFFILE: src\modules\workouts\workouts.controller.ts
+----------------------------------------
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+
+import { WorkoutsService } from './workouts.service';
+import { CreateWorkoutDto } from './dto/create-workout.dto';
+import { UpdateWorkoutDto } from './dto/update-workout.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+
+@Controller('workouts')
+@UseGuards(JwtAuthGuard)
+export class WorkoutsController {
+  constructor(private readonly workoutsService: WorkoutsService) {}
+
+  @Post()
+  create(@Body() createWorkoutDto: CreateWorkoutDto, @Request() req) {
+    return this.workoutsService.create(createWorkoutDto, req.user.userId);
+  }
+
+  @Get()
+  findAll(@Request() req) {
+    return this.workoutsService.findAll(req.user.userId, req.user.role);
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string, @Request() req) {
+    return this.workoutsService.findOne(id, req.user.userId, req.user.role);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateWorkoutDto: UpdateWorkoutDto, @Request() req) {
+    return this.workoutsService.update(id, updateWorkoutDto, req.user.userId, req.user.role);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string, @Request() req) {
+    return this.workoutsService.remove(id, req.user.userId, req.user.role);
+  }
+
+  @Patch(':id/complete')
+  markAsCompleted(@Param('id') id: string, @Request() req) {
+    return this.workoutsService.markAsCompleted(id, req.user.userId);
+  }
+}
+----------------------------------------
+ENDOFFILE: src\modules\workouts\workouts.controller.ts
+
+STARTOFFILE: src\modules\workouts\workouts.module.ts
+----------------------------------------
+import { Module } from '@nestjs/common';
+import { MongooseModule } from '@nestjs/mongoose';
+
+import { WorkoutsService } from './workouts.service';
+import { WorkoutsController } from './workouts.controller';
+import { Workout, WorkoutSchema } from './schemas/workout.schema';
+
+@Module({
+  imports: [
+    MongooseModule.forFeature([{ name: Workout.name, schema: WorkoutSchema }]),
+  ],
+  controllers: [WorkoutsController],
+  providers: [WorkoutsService],
+  exports: [WorkoutsService],
+})
+export class WorkoutsModule {}
+----------------------------------------
+ENDOFFILE: src\modules\workouts\workouts.module.ts
+
+STARTOFFILE: src\modules\workouts\workouts.service.ts
+----------------------------------------
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+
+import { Workout, WorkoutDocument } from './schemas/workout.schema';
+import { CreateWorkoutDto } from './dto/create-workout.dto';
+import { UpdateWorkoutDto } from './dto/update-workout.dto';
+
+@Injectable()
+export class WorkoutsService {
+  constructor(
+    @InjectModel(Workout.name) private workoutModel: Model<WorkoutDocument>,
+  ) {}
+
+  async create(createWorkoutDto: CreateWorkoutDto, userId: string): Promise<Workout> {
+    const createdWorkout = new this.workoutModel({
+      ...createWorkoutDto,
+      createdBy: userId,
+    });
+
+    return createdWorkout.save();
+  }
+
+  async findAll(userId: string, userRole: string): Promise<Workout[]> {
+    if (userRole === 'trainer') {
+      return this.workoutModel
+        .find({ createdBy: userId })
+        .populate('createdBy', 'name email')
+        .populate('assignedTo', 'name email')
+        .exec();
+    }
+
+    return this.workoutModel
+      .find({ assignedTo: userId })
+      .populate('createdBy', 'name email')
+      .exec();
+  }
+
+  async findOne(id: string, userId: string, userRole: string): Promise<Workout> {
+    const workout = await this.workoutModel
+      .findById(id)
+      .populate('createdBy', 'name email')
+      .populate('assignedTo', 'name email')
+      .exec();
+
+    if (!workout) {
+      throw new NotFoundException('Workout not found');
+    }
+
+    if (userRole === 'trainer' && workout.createdBy._id.toString() !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    if (userRole === 'athlete' && !workout.assignedTo.some(id => id.toString() === userId)) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    return workout;
+  }
+
+  async update(id: string, updateWorkoutDto: UpdateWorkoutDto, userId: string, userRole: string): Promise<Workout> {
+    const workout = await this.workoutModel.findById(id);
+
+    if (!workout) {
+      throw new NotFoundException('Workout not found');
+    }
+
+    if (userRole === 'trainer' && workout.createdBy.toString() !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    const updatedWorkout = await this.workoutModel
+      .findByIdAndUpdate(id, updateWorkoutDto, { new: true })
+      .populate('createdBy', 'name email')
+      .populate('assignedTo', 'name email')
+      .exec();
+
+    return updatedWorkout;
+  }
+
+  async remove(id: string, userId: string, userRole: string): Promise<void> {
+    const workout = await this.workoutModel.findById(id);
+
+    if (!workout) {
+      throw new NotFoundException('Workout not found');
+    }
+
+    if (userRole === 'trainer' && workout.createdBy.toString() !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    await this.workoutModel.findByIdAndDelete(id).exec();
+  }
+
+  async markAsCompleted(id: string, userId: string): Promise<Workout> {
+    const workout = await this.workoutModel.findById(id);
+
+    if (!workout) {
+      throw new NotFoundException('Workout not found');
+    }
+
+    if (!workout.assignedTo.some(assignedId => assignedId.toString() === userId)) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    workout.completed = true;
+    workout.completedAt = new Date();
+
+    return workout.save();
+  }
+}
+----------------------------------------
+ENDOFFILE: src\modules\workouts\workouts.service.ts
+
+STARTOFFILE: src\scripts\seed.ts
+----------------------------------------
+import { NestFactory } from '@nestjs/core';
+import * as bcrypt from 'bcrypt';
+import { AppModule } from '../app.module';
+import { UsersService } from '../modules/users/users.service';
+import { ExercisesService } from '../modules/exercises/exercises.service';
+
+async function bootstrap() {
+  const app = await NestFactory.createApplicationContext(AppModule);
+  
+  const usersService = app.get(UsersService);
+  const exercisesService = app.get(ExercisesService);
+
+  try {
+    console.log('Starting seed...');
+
+    const hashedPasswordTrainer = await bcrypt.hash('trainer123', 10);
+    const hashedPasswordAthlete = await bcrypt.hash('athlete123', 10);
+
+    const trainer = await usersService.create({
+      name: 'Coach Johnson',
+      email: 'trainer@gmail.com',
+      password: hashedPasswordTrainer,
+      role: 'trainer',
+      bio: 'Treinador certificado com 10 anos de experiência',
+    });
+
+    const athlete = await usersService.create({
+      name: 'Alex Thompson',
+      email: 'athlete@gmail.com',
+      password: hashedPasswordAthlete,
+      role: 'athlete',
+      bio: 'Atleta dedicado focado em força e condicionamento',
+      weight: 75,
+      height: 180,
+      age: 28,
+    });
+
+    console.log('Users created:', { trainer: trainer.email, athlete: athlete.email });
+
+    const exercises = [
+      {
+        name: 'Supino Reto',
+        description: 'Exercício composto para peitorais, tríceps e ombros',
+        category: 'Força',
+        difficulty: 'intermediate',
+        muscleGroups: ['Peitoral', 'Tríceps', 'Ombros'],
+        equipment: 'Barra',
+        instructions: [
+          'Deite-se no banco com os pés firmes no chão',
+          'Segure a barra com pegada um pouco mais larga que os ombros',
+          'Baixe a barra controladamente até o peito',
+          'Empurre a barra de volta à posição inicial',
+        ],
+        tips: ['Mantenha os cotovelos a 45 graus', 'Não arqueie excessivamente as costas'],
+        isCustom: false,
+      },
+      {
+        name: 'Agachamento Livre',
+        description: 'Exercício fundamental para desenvolvimento de pernas',
+        category: 'Força',
+        difficulty: 'advanced',
+        muscleGroups: ['Quadríceps', 'Glúteos', 'Isquiotibiais'],
+        equipment: 'Barra',
+        instructions: [
+          'Posicione a barra nas costas, trapézio superior',
+          'Pés na largura dos ombros',
+          'Desça controladamente até as coxas ficarem paralelas ao chão',
+          'Retorne à posição inicial empurrando pelos calcanhares',
+        ],
+        tips: ['Mantenha o core contraído', 'Joelhos alinhados com os pés'],
+        isCustom: false,
+      },
+      {
+        name: 'Levantamento Terra',
+        description: 'Exercício completo para posterior da cadeia',
+        category: 'Força',
+        difficulty: 'advanced',
+        muscleGroups: ['Lombar', 'Glúteos', 'Isquiotibiais', 'Trapézio'],
+        equipment: 'Barra',
+        instructions: [
+          'Fique em pé com a barra próxima às canelas',
+          'Flexione os quadris e joelhos para segurar a barra',
+          'Mantenha as costas retas e levante a barra estendendo quadris e joelhos',
+          'Abaixe a barra controladamente',
+        ],
+        tips: ['Não arredonde as costas', 'Olhe para frente durante o movimento'],
+        isCustom: false,
+      },
+      {
+        name: 'Desenvolvimento com Halteres',
+        description: 'Exercício para ombros e tríceps',
+        category: 'Força',
+        difficulty: 'intermediate',
+        muscleGroups: ['Ombros', 'Tríceps'],
+        equipment: 'Halteres',
+        instructions: [
+          'Sente-se com as costas apoiadas',
+          'Segure os halteres na altura dos ombros',
+          'Empurre os halteres acima da cabeça',
+          'Retorne controladamente à posição inicial',
+        ],
+        tips: ['Não travar os cotovelos completamente', 'Controle o movimento na descida'],
+        isCustom: false,
+      },
+      {
+        name: 'Remada Curvada',
+        description: 'Exercício para desenvolvimento das costas',
+        category: 'Força',
+        difficulty: 'intermediate',
+        muscleGroups: ['Dorsais', 'Trapézio', 'Bíceps'],
+        equipment: 'Barra',
+        instructions: [
+          'Incline o tronco para frente mantendo as costas retas',
+          'Segure a barra com pegada pronada',
+          'Puxe a barra em direção ao abdômen',
+          'Controle a descida da barra',
+        ],
+        tips: ['Mantenha os cotovelos próximos ao corpo', 'Não use impulso'],
+        isCustom: false,
+      },
+      {
+        name: 'Corrida',
+        description: 'Exercício cardiovascular completo',
+        category: 'Cardio',
+        difficulty: 'beginner',
+        muscleGroups: ['Pernas', 'Core'],
+        equipment: 'Nenhum',
+        instructions: [
+          'Aqueça com caminhada leve por 5 minutos',
+          'Mantenha postura ereta durante a corrida',
+          'Alterne entre ritmos moderado e intenso',
+          'Finalize com caminhada para desacelerar',
+        ],
+        tips: ['Use tênis adequados', 'Hidrate-se antes e depois'],
+        isCustom: false,
+      },
+      {
+        name: 'Burpees',
+        description: 'Exercício de corpo inteiro de alta intensidade',
+        category: 'HIIT',
+        difficulty: 'intermediate',
+        muscleGroups: ['Corpo inteiro'],
+        equipment: 'Nenhum',
+        instructions: [
+          'Comece em pé',
+          'Agache e coloque as mãos no chão',
+          'Jogue os pés para trás em posição de prancha',
+          'Faça uma flexão',
+          'Traga os pés de volta e salte',
+        ],
+        tips: ['Mantenha o core contraído', 'Controle o movimento'],
+        isCustom: false,
+      },
+      {
+        name: 'Prancha Abdominal',
+        description: 'Exercício isométrico para core',
+        category: 'Core',
+        difficulty: 'beginner',
+        muscleGroups: ['Abdômen', 'Lombar'],
+        equipment: 'Nenhum',
+        instructions: [
+          'Apoie-se nos antebraços e pontas dos pés',
+          'Mantenha o corpo em linha reta',
+          'Contraia o abdômen',
+          'Segure a posição pelo tempo determinado',
+        ],
+        tips: ['Não deixe os quadris caírem', 'Respire normalmente'],
+        isCustom: false,
+      },
+    ];
+
+    for (const exercise of exercises) {
+      await exercisesService.create(exercise);
+    }
+
+    console.log(`${exercises.length} exercises created`);
+    console.log('Seed completed successfully!');
+  } catch (error) {
+    console.error('Error during seed:', error);
+  } finally {
+    await app.close();
+  }
+}
+
+bootstrap();
+----------------------------------------
+ENDOFFILE: src\scripts\seed.ts
+
+STARTOFFILE: tsconfig.json
+----------------------------------------
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2021",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "skipLibCheck": true,
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": false,
+    "noFallthroughCasesInSwitch": false,
+    "esModuleInterop": true
+  }
+}
+----------------------------------------
+ENDOFFILE: tsconfig.json

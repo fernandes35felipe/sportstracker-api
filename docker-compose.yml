@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6
+    container_name: sports-tracker-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: sports-tracker
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - sports-tracker-network
+
+  api:
+    build: .
+    container_name: sports-tracker-api
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/sports-tracker?authSource=admin
+      JWT_SECRET: your-super-secret-jwt-key
+      JWT_EXPIRES_IN: 7d
+    depends_on:
+      - mongodb
+    networks:
+      - sports-tracker-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  sports-tracker-network:
+    driver: bridge

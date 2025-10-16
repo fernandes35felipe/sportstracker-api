@@ -1,18 +1,28 @@
-import { NestFactory } from "@nestjs/core";
-import { AppModule } from "./app.module";
-import { ValidationPipe } from "@nestjs/common";
+import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
+
+import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.setGlobalPrefix("api");
+
   app.enableCors({
-    // CORREÇÃO: Adicionamos http://localhost:8080 e o domínio externo da API
-    origin: "*",
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    origin: '*',
     credentials: true,
   });
-  app.useGlobalPipes(new ValidationPipe());
-  await app.listen(3000);
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
+
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+  
+  console.log(`Application running on: http://localhost:${port}`);
 }
 
 bootstrap();
