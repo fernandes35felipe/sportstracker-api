@@ -17,7 +17,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGODB_URI'),
+        uri: 'mongodb+srv://admin:Swordfish35@cluster0.ojl4sve.mongodb.net/?retryWrites=true&w=majority&appname=Cluster0/sportstracker'
       }),
       inject: [ConfigService],
     }),
