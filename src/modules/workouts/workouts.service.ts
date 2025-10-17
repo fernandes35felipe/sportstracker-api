@@ -13,11 +13,11 @@ export class WorkoutsService {
   ) {}
 
   async create(createWorkoutDto: CreateWorkoutDto, userId: string): Promise<Workout> {
+
     const createdWorkout = new this.workoutModel({
       ...createWorkoutDto,
       createdBy: userId,
     });
-
     return createdWorkout.save();
   }
 
