@@ -1,12 +1,12 @@
 # Code Merge Output
-Generated at: 2025-10-16T03:53:35.839Z
+Generated at: 2025-10-17T14:40:03.148Z
 Source path: .
 Files processed: 52
-Total lines: 2570
-Total characters: 64550
+Total lines: 2578
+Total characters: 67366
 
 File types:
-  - ts: 47 files (2.085 lines)
+  - ts: 47 files (2.093 lines)
   - json: 3 files (113 lines)
   - md: 2 files (372 lines)
 
@@ -85,7 +85,7 @@ Project structure & file index:
       workouts/
         - workouts.controller.ts (42 lines)
         - workouts.module.ts (16 lines)
-        - workouts.service.ts (111 lines)
+        - workouts.service.ts (119 lines)
         dto/
           - create-workout.dto.ts (60 lines)
           - update-workout.dto.ts (47 lines)
@@ -599,7 +599,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGODB_URI'),
+        uri: 'mongodb+srv://admin:Swordfish35@cluster0.ojl4sve.mongodb.net/?retryWrites=true&w=majority&appname=Cluster0/sportstracker'
       }),
       inject: [ConfigService],
     }),
@@ -2604,9 +2604,7 @@ import { UpdateWorkoutDto } from './dto/update-workout.dto';
 
 @Injectable()
 export class WorkoutsService {
-  constructor(
-    @InjectModel(Workout.name) private workoutModel: Model<WorkoutDocument>,
-  ) {}
+  constructor(@InjectModel(Workout.name) private workoutModel: Model<WorkoutDocument>) {}
 
   async create(createWorkoutDto: CreateWorkoutDto, userId: string): Promise<Workout> {
     const createdWorkout = new this.workoutModel({
@@ -2643,18 +2641,27 @@ export class WorkoutsService {
       throw new NotFoundException('Workout not found');
     }
 
-    if (userRole === 'trainer' && workout.createdBy._id.toString() !== userId) {
+    // normalize createdBy to an id string whether it's populated (object with _id) or an ObjectId
+    const creatorId =
+      (workout.createdBy as any)?._id?.toString() ?? (workout.createdBy as any)?.toString();
+
+    if (userRole === 'trainer' && creatorId !== userId) {
       throw new ForbiddenException('Access denied');
     }
 
-    if (userRole === 'athlete' && !workout.assignedTo.some(id => id.toString() === userId)) {
+    if (userRole === 'athlete' && !workout.assignedTo.some((id) => id.toString() === userId)) {
       throw new ForbiddenException('Access denied');
     }
 
     return workout;
   }
 
-  async update(id: string, updateWorkoutDto: UpdateWorkoutDto, userId: string, userRole: string): Promise<Workout> {
+  async update(
+    id: string,
+    updateWorkoutDto: UpdateWorkoutDto,
+    userId: string,
+    userRole: string,
+  ): Promise<Workout> {
     const workout = await this.workoutModel.findById(id);
 
     if (!workout) {
@@ -2695,7 +2702,7 @@ export class WorkoutsService {
       throw new NotFoundException('Workout not found');
     }
 
-    if (!workout.assignedTo.some(assignedId => assignedId.toString() === userId)) {
+    if (!workout.assignedTo.some((assignedId) => assignedId.toString() === userId)) {
       throw new ForbiddenException('Access denied');
     }
 
@@ -2705,6 +2712,7 @@ export class WorkoutsService {
     return workout.save();
   }
 }
+
 ----------------------------------------
 ENDOFFILE: src\modules\workouts\workouts.service.ts
 
