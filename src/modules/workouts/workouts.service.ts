@@ -8,9 +8,7 @@ import { UpdateWorkoutDto } from './dto/update-workout.dto';
 
 @Injectable()
 export class WorkoutsService {
-  constructor(
-    @InjectModel(Workout.name) private workoutModel: Model<WorkoutDocument>,
-  ) {}
+  constructor(@InjectModel(Workout.name) private workoutModel: Model<WorkoutDocument>) {}
 
   async create(createWorkoutDto: CreateWorkoutDto, userId: string): Promise<Workout> {
     const createdWorkout = new this.workoutModel({
@@ -47,18 +45,27 @@ export class WorkoutsService {
       throw new NotFoundException('Workout not found');
     }
 
-    if (userRole === 'trainer' && workout.createdBy._id.toString() !== userId) {
+    // normalize createdBy to an id string whether it's populated (object with _id) or an ObjectId
+    const creatorId =
+      (workout.createdBy as any)?._id?.toString() ?? (workout.createdBy as any)?.toString();
+
+    if (userRole === 'trainer' && creatorId !== userId) {
       throw new ForbiddenException('Access denied');
     }
 
-    if (userRole === 'athlete' && !workout.assignedTo.some(id => id.toString() === userId)) {
+    if (userRole === 'athlete' && !workout.assignedTo.some((id) => id.toString() === userId)) {
       throw new ForbiddenException('Access denied');
     }
 
     return workout;
   }
 
-  async update(id: string, updateWorkoutDto: UpdateWorkoutDto, userId: string, userRole: string): Promise<Workout> {
+  async update(
+    id: string,
+    updateWorkoutDto: UpdateWorkoutDto,
+    userId: string,
+    userRole: string,
+  ): Promise<Workout> {
     const workout = await this.workoutModel.findById(id);
 
     if (!workout) {
@@ -99,7 +106,7 @@ export class WorkoutsService {
       throw new NotFoundException('Workout not found');
     }
 
-    if (!workout.assignedTo.some(assignedId => assignedId.toString() === userId)) {
+    if (!workout.assignedTo.some((assignedId) => assignedId.toString() === userId)) {
       throw new ForbiddenException('Access denied');
     }
 
