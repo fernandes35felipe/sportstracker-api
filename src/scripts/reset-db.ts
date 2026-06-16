@@ -7,11 +7,11 @@ import { Goal } from '../modules/goals/entities/goal.entity';
 async function resetDatabase() {
   const dataSource = new DataSource({
     type: 'postgres',
-    host: process.env.DATABASE_HOST || '151.243.218.59',
+    host: process.env.DATABASE_HOST,
     port: Number(process.env.DATABASE_PORT) || 5432,
-    username: process.env.DATABASE_USER || 'postgres',
-    password: process.env.DATABASE_PASSWORD || 'r2d2pyx4*',
-    database: process.env.DATABASE_NAME || 'zeni_wallet',
+    username: process.env.DATABASE_USER,
+    password: process.env.DATABASE_PASSWORD,
+    database: process.env.DATABASE_NAME,
     entities: [User, Workout, Exercise, Goal],
     synchronize: false,
     ssl: false,
@@ -23,11 +23,11 @@ async function resetDatabase() {
 
     const queryRunner = dataSource.createQueryRunner();
 
+    // Only drop sports-specific tables. Never drop "users" — it is shared with the wallet backend.
     await queryRunner.query('DROP TABLE IF EXISTS "workout_assigned_users" CASCADE');
     await queryRunner.query('DROP TABLE IF EXISTS "goals" CASCADE');
     await queryRunner.query('DROP TABLE IF EXISTS "workouts" CASCADE');
     await queryRunner.query('DROP TABLE IF EXISTS "exercises" CASCADE');
-    await queryRunner.query('DROP TABLE IF EXISTS "users" CASCADE');
 
     console.log('All tables dropped. Run the application to recreate them.');
 
