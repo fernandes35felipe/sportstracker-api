@@ -9,14 +9,10 @@ import { UpdateWorkoutDto } from './dto/update-workout.dto';
 
 @Injectable()
 export class WorkoutsService {
-<<<<<<< HEAD
   constructor(
     @InjectRepository(Workout) private workoutRepo: Repository<Workout>,
     @InjectRepository(User) private userRepo: Repository<User>,
   ) {}
-=======
-  constructor(@InjectModel(Workout.name) private workoutModel: Model<WorkoutDocument>) {}
->>>>>>> 27f890729c5ac5714e3d14cec67a1ddf10debe40
 
   async create(createWorkoutDto: CreateWorkoutDto, userId: string): Promise<Workout> {
     const { assignedTo: assignedToIds, ...rest } = createWorkoutDto;
@@ -52,23 +48,11 @@ export class WorkoutsService {
 
     if (!workout) throw new NotFoundException('Workout not found');
 
-<<<<<<< HEAD
     if (userRole === 'trainer' && workout.createdById !== userId) {
       throw new ForbiddenException('Access denied');
     }
 
     if (userRole === 'athlete' && !workout.assignedTo.some(u => u.id === userId)) {
-=======
-    // normalize createdBy to an id string whether it's populated (object with _id) or an ObjectId
-    const creatorId =
-      (workout.createdBy as any)?._id?.toString() ?? (workout.createdBy as any)?.toString();
-
-    if (userRole === 'trainer' && creatorId !== userId) {
-      throw new ForbiddenException('Access denied');
-    }
-
-    if (userRole === 'athlete' && !workout.assignedTo.some((id) => id.toString() === userId)) {
->>>>>>> 27f890729c5ac5714e3d14cec67a1ddf10debe40
       throw new ForbiddenException('Access denied');
     }
 
@@ -81,14 +65,10 @@ export class WorkoutsService {
     userId: string,
     userRole: string,
   ): Promise<Workout> {
-<<<<<<< HEAD
     const workout = await this.workoutRepo.findOne({
       where: { id },
       relations: { assignedTo: true },
     });
-=======
-    const workout = await this.workoutModel.findById(id);
->>>>>>> 27f890729c5ac5714e3d14cec67a1ddf10debe40
 
     if (!workout) throw new NotFoundException('Workout not found');
 
@@ -134,11 +114,7 @@ export class WorkoutsService {
 
     if (!workout) throw new NotFoundException('Workout not found');
 
-<<<<<<< HEAD
     if (!workout.assignedTo.some(u => u.id === userId)) {
-=======
-    if (!workout.assignedTo.some((assignedId) => assignedId.toString() === userId)) {
->>>>>>> 27f890729c5ac5714e3d14cec67a1ddf10debe40
       throw new ForbiddenException('Access denied');
     }
 

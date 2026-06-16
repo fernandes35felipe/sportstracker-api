@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
-import { WorkoutsService } from './workouts.service.ts';
+import { WorkoutsService } from './workouts.service';
 import { WorkoutsController } from './workouts.controller';
 import { Workout } from './entities/workout.entity';
 import { User } from '../users/entities/user.entity';
@@ -12,4 +12,4 @@ import { User } from '../users/entities/user.entity';
   providers: [WorkoutsService],
   exports: [WorkoutsService],
 })
-export class WorkoutsModule { }
+export class WorkoutsModule {}
