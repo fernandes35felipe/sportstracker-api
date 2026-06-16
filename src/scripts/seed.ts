@@ -1,25 +1,21 @@
 import { NestFactory } from '@nestjs/core';
-import * as bcrypt from 'bcrypt';
 import { AppModule } from '../app.module';
 import { UsersService } from '../modules/users/users.service';
 import { ExercisesService } from '../modules/exercises/exercises.service';
 
 async function bootstrap() {
   const app = await NestFactory.createApplicationContext(AppModule);
-  
+
   const usersService = app.get(UsersService);
   const exercisesService = app.get(ExercisesService);
 
   try {
     console.log('Starting seed...');
 
-    const hashedPasswordTrainer = await bcrypt.hash('trainer123', 10);
-    const hashedPasswordAthlete = await bcrypt.hash('athlete123', 10);
-
     const trainer = await usersService.create({
       name: 'Coach Johnson',
       email: 'trainer@gmail.com',
-      password: hashedPasswordTrainer,
+      password: 'trainer123',
       role: 'trainer',
       bio: 'Treinador certificado com 10 anos de experiência',
     });
@@ -27,7 +23,7 @@ async function bootstrap() {
     const athlete = await usersService.create({
       name: 'Alex Thompson',
       email: 'athlete@gmail.com',
-      password: hashedPasswordAthlete,
+      password: 'athlete123',
       role: 'athlete',
       bio: 'Atleta dedicado focado em força e condicionamento',
       weight: 75,

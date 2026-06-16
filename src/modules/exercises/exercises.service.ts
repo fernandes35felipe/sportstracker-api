@@ -1,83 +1,67 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
-import { Exercise, ExerciseDocument } from './schemas/exercise.schema';
+import { Exercise } from './entities/exercise.entity';
 import { CreateExerciseDto } from './dto/create-exercise.dto';
 import { UpdateExerciseDto } from './dto/update-exercise.dto';
 
 @Injectable()
 export class ExercisesService {
   constructor(
-    @InjectModel(Exercise.name) private exerciseModel: Model<ExerciseDocument>,
+    @InjectRepository(Exercise) private exerciseRepo: Repository<Exercise>,
   ) {}
 
   async create(createExerciseDto: CreateExerciseDto, userId?: string): Promise<Exercise> {
-    const createdExercise = new this.exerciseModel({
+    const exercise = this.exerciseRepo.create({
       ...createExerciseDto,
-      createdBy: userId,
+      createdById: userId ?? null,
     });
-
-    return createdExercise.save();
+    return this.exerciseRepo.save(exercise);
   }
 
   async findAll(userId?: string): Promise<Exercise[]> {
-    const query: any = { isActive: true };
-    
     if (userId) {
-      query.$or = [
-        { isCustom: false },
-        { isCustom: true, createdBy: userId }
-      ];
-    } else {
-      query.isCustom = false;
+      return this.exerciseRepo
+        .createQueryBuilder('exercise')
+        .where('exercise.isActive = true')
+        .andWhere('(exercise.isCustom = false OR (exercise.isCustom = true AND exercise.createdById = :userId))', { userId })
+        .getMany();
     }
 
-    return this.exerciseModel.find(query).exec();
+    return this.exerciseRepo.find({ where: { isActive: true, isCustom: false } });
   }
 
   async findOne(id: string): Promise<Exercise> {
-    const exercise = await this.exerciseModel.findById(id).exec();
-    
-    if (!exercise) {
-      throw new NotFoundException('Exercise not found');
-    }
-
+    const exercise = await this.exerciseRepo.findOne({ where: { id } });
+    if (!exercise) throw new NotFoundException('Exercise not found');
     return exercise;
   }
 
   async findByCategory(category: string, userId?: string): Promise<Exercise[]> {
-    const query: any = { category, isActive: true };
-    
     if (userId) {
-      query.$or = [
-        { isCustom: false },
-        { isCustom: true, createdBy: userId }
-      ];
-    } else {
-      query.isCustom = false;
+      return this.exerciseRepo
+        .createQueryBuilder('exercise')
+        .where('exercise.isActive = true')
+        .andWhere('exercise.category = :category', { category })
+        .andWhere('(exercise.isCustom = false OR (exercise.isCustom = true AND exercise.createdById = :userId))', { userId })
+        .getMany();
     }
 
-    return this.exerciseModel.find(query).exec();
+    return this.exerciseRepo.find({ where: { category, isActive: true, isCustom: false } });
   }
 
   async update(id: string, updateExerciseDto: UpdateExerciseDto): Promise<Exercise> {
-    const exercise = await this.exerciseModel
-      .findByIdAndUpdate(id, updateExerciseDto, { new: true })
-      .exec();
+    const exercise = await this.exerciseRepo.findOne({ where: { id } });
+    if (!exercise) throw new NotFoundException('Exercise not found');
 
-    if (!exercise) {
-      throw new NotFoundException('Exercise not found');
-    }
-
-    return exercise;
+    Object.assign(exercise, updateExerciseDto);
+    return this.exerciseRepo.save(exercise);
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.exerciseModel.findByIdAndDelete(id).exec();
-    
-    if (!result) {
-      throw new NotFoundException('Exercise not found');
-    }
+    const exercise = await this.exerciseRepo.findOne({ where: { id } });
+    if (!exercise) throw new NotFoundException('Exercise not found');
+    await this.exerciseRepo.delete(id);
   }
 }

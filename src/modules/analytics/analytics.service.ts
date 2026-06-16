@@ -1,21 +1,28 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
-import { Workout, WorkoutDocument } from '../workouts/schemas/workout.schema';
-import { Goal, GoalDocument } from '../goals/schemas/goal.schema';
+import { Workout } from '../workouts/entities/workout.entity';
+import { Goal } from '../goals/entities/goal.entity';
 
 @Injectable()
 export class AnalyticsService {
   constructor(
-    @InjectModel(Workout.name) private workoutModel: Model<WorkoutDocument>,
-    @InjectModel(Goal.name) private goalModel: Model<GoalDocument>,
+    @InjectRepository(Workout) private workoutRepo: Repository<Workout>,
+    @InjectRepository(Goal) private goalRepo: Repository<Goal>,
   ) {}
 
   async getUserStats(userId: string) {
     const now = new Date();
-    const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const base = () =>
+      this.workoutRepo
+        .createQueryBuilder('workout')
+        .innerJoin('workout.assignedTo', 'u', 'u.id = :userId', { userId });
 
     const [
       totalWorkouts,
@@ -26,21 +33,19 @@ export class AnalyticsService {
       completedGoals,
       activeGoals,
     ] = await Promise.all([
-      this.workoutModel.countDocuments({ assignedTo: userId }),
-      this.workoutModel.countDocuments({ assignedTo: userId, completed: true }),
-      this.workoutModel.countDocuments({
-        assignedTo: userId,
-        completed: true,
-        completedAt: { $gte: startOfWeek },
-      }),
-      this.workoutModel.countDocuments({
-        assignedTo: userId,
-        completed: true,
-        completedAt: { $gte: startOfMonth },
-      }),
-      this.goalModel.countDocuments({ userId }),
-      this.goalModel.countDocuments({ userId, status: 'completed' }),
-      this.goalModel.countDocuments({ userId, status: 'active' }),
+      base().getCount(),
+      base().andWhere('workout.completed = true').getCount(),
+      base()
+        .andWhere('workout.completed = true')
+        .andWhere('workout.completedAt >= :startOfWeek', { startOfWeek })
+        .getCount(),
+      base()
+        .andWhere('workout.completed = true')
+        .andWhere('workout.completedAt >= :startOfMonth', { startOfMonth })
+        .getCount(),
+      this.goalRepo.count({ where: { userId } }),
+      this.goalRepo.count({ where: { userId, status: 'completed' } }),
+      this.goalRepo.count({ where: { userId, status: 'active' } }),
     ]);
 
     return {
@@ -60,43 +65,35 @@ export class AnalyticsService {
     };
   }
 
-  async getWorkoutTrends(userId: string, days: number = 30) {
+  async getWorkoutTrends(userId: string, days = 30) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    const workouts = await this.workoutModel
-      .find({
-        assignedTo: userId,
-        completed: true,
-        completedAt: { $gte: startDate },
-      })
-      .sort({ completedAt: 1 })
-      .exec();
+    const workouts = await this.workoutRepo
+      .createQueryBuilder('workout')
+      .innerJoin('workout.assignedTo', 'u', 'u.id = :userId', { userId })
+      .where('workout.completed = true')
+      .andWhere('workout.completedAt >= :startDate', { startDate })
+      .orderBy('workout.completedAt', 'ASC')
+      .getMany();
 
-    const dailyStats = workouts.reduce((acc, workout) => {
+    return workouts.reduce((acc, workout) => {
       const date = new Date(workout.completedAt).toISOString().split('T')[0];
-      
-      if (!acc[date]) {
-        acc[date] = { count: 0, categories: {} };
-      }
-      
+      if (!acc[date]) acc[date] = { count: 0, categories: {} };
       acc[date].count++;
       acc[date].categories[workout.category] = (acc[date].categories[workout.category] || 0) + 1;
-      
       return acc;
     }, {});
-
-    return dailyStats;
   }
 
   async getGoalProgress(userId: string) {
-    const goals = await this.goalModel
-      .find({ userId, isActive: true })
-      .sort({ createdAt: -1 })
-      .exec();
+    const goals = await this.goalRepo.find({
+      where: { userId, isActive: true },
+      order: { createdAt: 'DESC' },
+    });
 
     return goals.map(goal => ({
-      id: goal._id,
+      id: goal.id,
       title: goal.title,
       category: goal.category,
       progress: goal.target > 0 ? (goal.current / goal.target) * 100 : 0,
@@ -108,15 +105,15 @@ export class AnalyticsService {
   }
 
   async getCategoryDistribution(userId: string) {
-    const workouts = await this.workoutModel
-      .find({ assignedTo: userId, completed: true })
-      .exec();
+    const workouts = await this.workoutRepo
+      .createQueryBuilder('workout')
+      .innerJoin('workout.assignedTo', 'u', 'u.id = :userId', { userId })
+      .where('workout.completed = true')
+      .getMany();
 
-    const distribution = workouts.reduce((acc, workout) => {
+    return workouts.reduce((acc, workout) => {
       acc[workout.category] = (acc[workout.category] || 0) + 1;
       return acc;
     }, {});
-
-    return distribution;
   }
 }

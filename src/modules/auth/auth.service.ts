@@ -15,34 +15,25 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
-    
-    if (!user) {
-      return null;
-    }
+    if (!user) return null;
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    
-    if (!isPasswordValid) {
-      return null;
-    }
+    if (!isPasswordValid) return null;
 
-    const { password: _, ...result } = user.toObject();
+    const { password: _, ...result } = user;
     return result;
   }
 
   async login(loginDto: LoginDto) {
     const user = await this.validateUser(loginDto.email, loginDto.password);
-    
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+    if (!user) throw new UnauthorizedException('Invalid credentials');
 
-    const payload = { email: user.email, sub: user._id, role: user.role };
-    
+    const payload = { email: user.email, sub: user.id, role: user.role };
+
     return {
       access_token: this.jwtService.sign(payload),
       user: {
-        id: user._id,
+        id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,
@@ -52,13 +43,13 @@ export class AuthService {
 
   async register(createUserDto: CreateUserDto) {
     const user = await this.usersService.create(createUserDto);
-    
-    const payload = { email: user.email, sub: user._id, role: user.role };
-    
+
+    const payload = { email: user.email, sub: user.id, role: user.role };
+
     return {
       access_token: this.jwtService.sign(payload),
       user: {
-        id: user._id,
+        id: user.id,
         name: user.name,
         email: user.email,
         role: user.role,

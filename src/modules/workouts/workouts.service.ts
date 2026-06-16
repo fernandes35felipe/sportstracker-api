@@ -1,111 +1,126 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, In } from 'typeorm';
 
-import { Workout, WorkoutDocument } from './schemas/workout.schema';
+import { Workout } from './entities/workout.entity';
+import { User } from '../users/entities/user.entity';
 import { CreateWorkoutDto } from './dto/create-workout.dto';
 import { UpdateWorkoutDto } from './dto/update-workout.dto';
 
 @Injectable()
 export class WorkoutsService {
   constructor(
-    @InjectModel(Workout.name) private workoutModel: Model<WorkoutDocument>,
+    @InjectRepository(Workout) private workoutRepo: Repository<Workout>,
+    @InjectRepository(User) private userRepo: Repository<User>,
   ) {}
 
   async create(createWorkoutDto: CreateWorkoutDto, userId: string): Promise<Workout> {
+    const { assignedTo: assignedToIds, ...rest } = createWorkoutDto;
 
-    const createdWorkout = new this.workoutModel({
-      ...createWorkoutDto,
-      createdBy: userId,
-    });
-    return createdWorkout.save();
+    const workout = this.workoutRepo.create({ ...rest, createdById: userId });
+    workout.assignedTo = assignedToIds?.length
+      ? await this.userRepo.findBy({ id: In(assignedToIds) })
+      : [];
+
+    return this.workoutRepo.save(workout);
   }
 
   async findAll(userId: string, userRole: string): Promise<Workout[]> {
     if (userRole === 'trainer') {
-      return this.workoutModel
-        .find({ createdBy: userId })
-        .populate('createdBy', 'name email')
-        .populate('assignedTo', 'name email')
-        .exec();
+      return this.workoutRepo.find({
+        where: { createdById: userId },
+        relations: { createdBy: true, assignedTo: true },
+      });
     }
 
-    return this.workoutModel
-      .find({ assignedTo: userId })
-      .populate('createdBy', 'name email')
-      .exec();
+    return this.workoutRepo
+      .createQueryBuilder('workout')
+      .leftJoinAndSelect('workout.createdBy', 'creator')
+      .innerJoin('workout.assignedTo', 'assigned', 'assigned.id = :userId', { userId })
+      .getMany();
   }
 
   async findOne(id: string, userId: string, userRole: string): Promise<Workout> {
-    const workout = await this.workoutModel
-      .findById(id)
-      .populate('createdBy', 'name email')
-      .populate('assignedTo', 'name email')
-      .exec();
+    const workout = await this.workoutRepo.findOne({
+      where: { id },
+      relations: { createdBy: true, assignedTo: true },
+    });
 
-    if (!workout) {
-      throw new NotFoundException('Workout not found');
-    }
+    if (!workout) throw new NotFoundException('Workout not found');
 
-    if (userRole === 'trainer' && workout.createdBy._id.toString() !== userId) {
+    if (userRole === 'trainer' && workout.createdById !== userId) {
       throw new ForbiddenException('Access denied');
     }
 
-    if (userRole === 'athlete' && !workout.assignedTo.some(id => id.toString() === userId)) {
+    if (userRole === 'athlete' && !workout.assignedTo.some(u => u.id === userId)) {
       throw new ForbiddenException('Access denied');
     }
 
     return workout;
   }
 
-  async update(id: string, updateWorkoutDto: UpdateWorkoutDto, userId: string, userRole: string): Promise<Workout> {
-    const workout = await this.workoutModel.findById(id);
+  async update(
+    id: string,
+    updateWorkoutDto: UpdateWorkoutDto,
+    userId: string,
+    userRole: string,
+  ): Promise<Workout> {
+    const workout = await this.workoutRepo.findOne({
+      where: { id },
+      relations: { assignedTo: true },
+    });
 
-    if (!workout) {
-      throw new NotFoundException('Workout not found');
-    }
+    if (!workout) throw new NotFoundException('Workout not found');
 
-    if (userRole === 'trainer' && workout.createdBy.toString() !== userId) {
+    if (userRole === 'trainer' && workout.createdById !== userId) {
       throw new ForbiddenException('Access denied');
     }
 
-    const updatedWorkout = await this.workoutModel
-      .findByIdAndUpdate(id, updateWorkoutDto, { new: true })
-      .populate('createdBy', 'name email')
-      .populate('assignedTo', 'name email')
-      .exec();
+    const { assignedTo: assignedToIds, ...rest } = updateWorkoutDto;
+    Object.assign(workout, rest);
 
-    return updatedWorkout;
+    if (assignedToIds !== undefined) {
+      workout.assignedTo = assignedToIds.length
+        ? await this.userRepo.findBy({ id: In(assignedToIds) })
+        : [];
+    }
+
+    await this.workoutRepo.save(workout);
+
+    return this.workoutRepo.findOne({
+      where: { id },
+      relations: { createdBy: true, assignedTo: true },
+    });
   }
 
   async remove(id: string, userId: string, userRole: string): Promise<void> {
-    const workout = await this.workoutModel.findById(id);
+    const workout = await this.workoutRepo.findOne({ where: { id } });
 
-    if (!workout) {
-      throw new NotFoundException('Workout not found');
-    }
+    if (!workout) throw new NotFoundException('Workout not found');
 
-    if (userRole === 'trainer' && workout.createdBy.toString() !== userId) {
+    if (userRole === 'trainer' && workout.createdById !== userId) {
       throw new ForbiddenException('Access denied');
     }
 
-    await this.workoutModel.findByIdAndDelete(id).exec();
+    await this.workoutRepo.delete(id);
   }
 
   async markAsCompleted(id: string, userId: string): Promise<Workout> {
-    const workout = await this.workoutModel.findById(id);
+    const workout = await this.workoutRepo
+      .createQueryBuilder('workout')
+      .leftJoinAndSelect('workout.assignedTo', 'user')
+      .where('workout.id = :id', { id })
+      .getOne();
 
-    if (!workout) {
-      throw new NotFoundException('Workout not found');
-    }
+    if (!workout) throw new NotFoundException('Workout not found');
 
-    if (!workout.assignedTo.some(assignedId => assignedId.toString() === userId)) {
+    if (!workout.assignedTo.some(u => u.id === userId)) {
       throw new ForbiddenException('Access denied');
     }
 
     workout.completed = true;
     workout.completedAt = new Date();
 
-    return workout.save();
+    return this.workoutRepo.save(workout);
   }
 }

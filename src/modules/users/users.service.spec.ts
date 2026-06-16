@@ -1,49 +1,41 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { getModelToken } from '@nestjs/mongoose';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 
 import { UsersService } from './users.service';
-import { User } from './schemas/user.schema';
+import { User } from './entities/user.entity';
 
 describe('UsersService', () => {
   let service: UsersService;
-  let mockUserModel: any;
+  let mockRepo: any;
 
-  const mockUser = {
-    _id: '507f1f77bcf86cd799439011',
+  const mockUser: Partial<User> = {
+    id: '550e8400-e29b-41d4-a716-446655440000',
     name: 'Test User',
     email: 'test@example.com',
     role: 'athlete',
     password: 'hashedPassword',
-    save: jest.fn().mockResolvedValue(this),
-    toObject: jest.fn().mockReturnValue({
-      _id: '507f1f77bcf86cd799439011',
-      name: 'Test User',
-      email: 'test@example.com',
-      role: 'athlete',
-    }),
+    isActive: true,
   };
 
   beforeEach(async () => {
-    mockUserModel = {
-      new: jest.fn().mockResolvedValue(mockUser),
-      constructor: jest.fn().mockResolvedValue(mockUser),
-      find: jest.fn(),
+    mockRepo = {
       findOne: jest.fn(),
-      findById: jest.fn(),
-      findByIdAndUpdate: jest.fn(),
-      findByIdAndDelete: jest.fn(),
-      exec: jest.fn(),
-      select: jest.fn(),
+      find: jest.fn(),
+      create: jest.fn(),
+      save: jest.fn(),
+      delete: jest.fn(),
+      createQueryBuilder: jest.fn(() => ({
+        addSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getOne: jest.fn(),
+      })),
     };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
-        {
-          provide: getModelToken(User.name),
-          useValue: mockUserModel,
-        },
+        { provide: getRepositoryToken(User), useValue: mockRepo },
       ],
     }).compile();
 
@@ -56,32 +48,25 @@ describe('UsersService', () => {
 
   describe('findOne', () => {
     it('should return a user by id', async () => {
-      mockUserModel.findById.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          exec: jest.fn().mockResolvedValue(mockUser),
-        }),
-      });
-
-      const result = await service.findOne('507f1f77bcf86cd799439011');
+      mockRepo.findOne.mockResolvedValue(mockUser);
+      const result = await service.findOne(mockUser.id);
       expect(result).toEqual(mockUser);
     });
 
     it('should throw NotFoundException when user not found', async () => {
-      mockUserModel.findById.mockReturnValue({
-        select: jest.fn().mockReturnValue({
-          exec: jest.fn().mockResolvedValue(null),
-        }),
-      });
-
+      mockRepo.findOne.mockResolvedValue(null);
       await expect(service.findOne('nonexistent')).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('findByEmail', () => {
     it('should return a user by email', async () => {
-      mockUserModel.findOne.mockReturnValue({
-        exec: jest.fn().mockResolvedValue(mockUser),
-      });
+      const qb = {
+        addSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getOne: jest.fn().mockResolvedValue(mockUser),
+      };
+      mockRepo.createQueryBuilder.mockReturnValue(qb);
 
       const result = await service.findByEmail('test@example.com');
       expect(result).toEqual(mockUser);

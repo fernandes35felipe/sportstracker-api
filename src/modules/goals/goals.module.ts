@@ -1,14 +1,12 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { GoalsService } from './goals.service';
 import { GoalsController } from './goals.controller';
-import { Goal, GoalSchema } from './schemas/goal.schema';
+import { Goal } from './entities/goal.entity';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: Goal.name, schema: GoalSchema }]),
-  ],
+  imports: [TypeOrmModule.forFeature([Goal])],
   controllers: [GoalsController],
   providers: [GoalsService],
   exports: [GoalsService],
