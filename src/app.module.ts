@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 import { AuthModule } from './modules/auth/auth.module';
@@ -17,16 +17,20 @@ import { Goal } from './modules/goals/entities/goal.entity';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: '151.243.218.59',
-      port: 5432,
-      username: 'postgres',
-      password: 'r2d2pyx4*',
-      database: 'zeni_wallet',
-      entities: [User, Workout, Exercise, Goal],
-      synchronize: true,
-      ssl: false,
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (config: ConfigService) => ({
+        type: 'postgres',
+        host: config.get<string>('DATABASE_HOST'),
+        port: config.get<number>('DATABASE_PORT'),
+        username: config.get<string>('DATABASE_USER'),
+        password: config.get<string>('DATABASE_PASSWORD'),
+        database: config.get<string>('DATABASE_NAME'),
+        entities: [User, Workout, Exercise, Goal],
+        synchronize: true,
+        ssl: false,
+      }),
+      inject: [ConfigService],
     }),
     AuthModule,
     UsersModule,
