@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
 
-import { WorkoutsService } from './workouts.service';
+import { WorkoutsService } from './workouts.service.ts';
 import { CreateWorkoutDto } from './dto/create-workout.dto';
 import { UpdateWorkoutDto } from './dto/update-workout.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -8,11 +8,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 @Controller('workouts')
 @UseGuards(JwtAuthGuard)
 export class WorkoutsController {
-  constructor(private readonly workoutsService: WorkoutsService) {}
+  constructor(private readonly workoutsService: WorkoutsService) { }
 
   @Post()
   create(@Body() createWorkoutDto: CreateWorkoutDto, @Request() req) {
-    
+
     return this.workoutsService.create(createWorkoutDto, req.user.userId);
   }
 

@@ -1,3 +1,5 @@
+// backend/src/modules/users/dto/update-user.dto.ts
+
 import { IsString, IsOptional, IsNumber, IsArray, IsBoolean } from 'class-validator';
 
 export class UpdateUserDto {
@@ -28,6 +30,10 @@ export class UpdateUserDto {
   @IsOptional()
   @IsArray()
   goals?: string[];
+
+  @IsOptional()
+  @IsArray()
+  athletes?: string[];
 
   @IsOptional()
   @IsBoolean()
