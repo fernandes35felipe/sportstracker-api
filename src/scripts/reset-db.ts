@@ -25,7 +25,7 @@ async function resetDatabase() {
 
     // Only drop sports-specific tables. Never drop "users" — it is shared with the wallet backend.
     await queryRunner.query('DROP TABLE IF EXISTS "workout_assigned_users" CASCADE');
-    await queryRunner.query('DROP TABLE IF EXISTS "goals" CASCADE');
+    await queryRunner.query('DROP TABLE IF EXISTS "sport_goals" CASCADE');
     await queryRunner.query('DROP TABLE IF EXISTS "workouts" CASCADE');
     await queryRunner.query('DROP TABLE IF EXISTS "exercises" CASCADE');
 
