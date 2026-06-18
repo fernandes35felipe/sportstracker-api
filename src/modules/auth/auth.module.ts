@@ -13,7 +13,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('WALLET_API_SECRET'),
+        secret: configService.get<string>('WALLET_API_SECRET') || configService.get<string>('JWT_SECRET') || 'DO_NOT_USE_THIS_IN_PRODUCTION_SECRET_KEY',
         signOptions: {
           expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '7d',
         },

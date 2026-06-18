@@ -14,29 +14,13 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column({ select: false })
+  @Column({ select: false, nullable: true })
   password: string;
 
-  // Shared with wallet backend (maps to full_name column)
   @Column({ name: 'full_name', nullable: true })
   fullName: string;
 
-  @Column({ default: 'full' })
-  plan: string;
-
-  @Column('text', { array: true, default: [], name: 'discount_tags' })
-  discountTags: string[];
-
-  @Column({ name: 'reset_token', nullable: true })
-  resetToken: string;
-
-  @Column({ name: 'reset_token_expiry', type: 'timestamp', nullable: true })
-  resetTokenExpiry: Date;
-
-  @Column({ name: 'partner_id', nullable: true })
-  partnerId: string;
-
-  // Sports tracker extras
+  // Sports-specific columns
   @Column({ default: 'athlete', nullable: true })
   role: string;
 
