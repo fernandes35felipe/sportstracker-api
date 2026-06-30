@@ -20,6 +20,23 @@ export class User {
   @Column({ name: 'full_name', nullable: true })
   fullName: string;
 
+  // Wallet-compatible columns (shared schema)
+  @Column({ nullable: true, default: 'full' })
+  plan: string;
+
+  @Column('text', { array: true, default: [], name: 'discount_tags', nullable: true })
+  discountTags: string[];
+
+
+  @Column({ name: 'reset_token', nullable: true })
+  resetToken: string;
+
+  @Column({ name: 'reset_token_expiry', type: 'timestamp', nullable: true })
+  resetTokenExpiry: Date;
+
+  @Column({ name: 'partner_id', nullable: true })
+  partnerId: string;
+
   // Sports-specific columns
   @Column({ default: 'athlete', nullable: true })
   role: string;
