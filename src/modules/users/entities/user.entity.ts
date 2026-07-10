@@ -37,6 +37,9 @@ export class User {
   @Column({ name: 'partner_id', nullable: true })
   partnerId: string;
 
+  @Column({ name: 'google_id', nullable: true, unique: true })
+  googleId: string;
+
   // Sports-specific columns
   @Column({ default: 'athlete', nullable: true })
   role: string;
