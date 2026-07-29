@@ -12,8 +12,7 @@ export class WorkoutsController {
 
   @Post()
   create(@Body() createWorkoutDto: CreateWorkoutDto, @Request() req) {
-
-    return this.workoutsService.create(createWorkoutDto, req.user.userId);
+    return this.workoutsService.create(createWorkoutDto, req.user.userId, req.user.role);
   }
 
   @Get()

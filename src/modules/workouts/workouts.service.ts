@@ -14,14 +14,22 @@ export class WorkoutsService {
     @InjectRepository(User) private userRepo: Repository<User>,
   ) {}
 
-  async create(createWorkoutDto: CreateWorkoutDto, userId: string): Promise<Workout> {
+  async create(createWorkoutDto: CreateWorkoutDto, userId: string, userRole: string): Promise<Workout> {
     const { assignedTo: assignedToIds, ...rest } = createWorkoutDto;
 
     const workout = this.workoutRepo.create({ ...rest, createdById: userId });
-    workout.assignedTo = assignedToIds?.length
+
+    let assignedUsers = assignedToIds?.length
       ? await this.userRepo.findBy({ id: In(assignedToIds) })
       : [];
 
+    // Athletes auto-assign themselves so they can track and complete their own workouts
+    if (userRole !== 'trainer' && !assignedUsers.some(u => u.id === userId)) {
+      const self = await this.userRepo.findOne({ where: { id: userId } });
+      if (self) assignedUsers = [self, ...assignedUsers];
+    }
+
+    workout.assignedTo = assignedUsers;
     return this.workoutRepo.save(workout);
   }
 
@@ -33,11 +41,25 @@ export class WorkoutsService {
       });
     }
 
-    return this.workoutRepo
-      .createQueryBuilder('workout')
-      .leftJoinAndSelect('workout.createdBy', 'creator')
-      .innerJoin('workout.assignedTo', 'assigned', 'assigned.id = :userId', { userId })
-      .getMany();
+    // Athletes see workouts assigned to them AND workouts they created themselves
+    const [assigned, selfCreated] = await Promise.all([
+      this.workoutRepo
+        .createQueryBuilder('workout')
+        .leftJoinAndSelect('workout.createdBy', 'creator')
+        .innerJoin('workout.assignedTo', 'assigned', 'assigned.id = :userId', { userId })
+        .getMany(),
+      this.workoutRepo.find({
+        where: { createdById: userId },
+        relations: { createdBy: true, assignedTo: true },
+      }),
+    ]);
+
+    const seen = new Set<string>();
+    return [...assigned, ...selfCreated].filter((w) => {
+      if (seen.has(w.id)) return false;
+      seen.add(w.id);
+      return true;
+    });
   }
 
   async findOne(id: string, userId: string, userRole: string): Promise<Workout> {
@@ -114,7 +136,9 @@ export class WorkoutsService {
 
     if (!workout) throw new NotFoundException('Workout not found');
 
-    if (!workout.assignedTo.some(u => u.id === userId)) {
+    const isAssigned = workout.assignedTo.some(u => u.id === userId);
+    const isCreator = workout.createdById === userId;
+    if (!isAssigned && !isCreator) {
       throw new ForbiddenException('Access denied');
     }
 

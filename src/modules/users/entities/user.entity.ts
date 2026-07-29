@@ -44,6 +44,9 @@ export class User {
   @Column({ default: 'athlete', nullable: true })
   role: string;
 
+  @Column({ name: 'is_trainer', default: false, nullable: true })
+  isTrainer: boolean;
+
   @Column({ type: 'text', nullable: true })
   bio: string;
 
