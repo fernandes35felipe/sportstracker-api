@@ -17,8 +17,16 @@ export class TrainerAthleteRelation {
   @Column({ name: 'athlete_id' })
   athleteId: string;
 
+  // pending = athlete sent request, active = accepted, rejected = denied
   @Column({ default: 'active' })
-  status: string; // active, pending, inactive
+  status: string;
+
+  // Filled by athlete when sending a request
+  @Column({ nullable: true })
+  phone: string;
+
+  @Column({ type: 'text', nullable: true })
+  message: string;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

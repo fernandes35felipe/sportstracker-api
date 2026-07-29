@@ -5,6 +5,7 @@ import {
   Post,
   Param,
   Delete,
+  Query,
   UseGuards,
   Request,
   Body,
@@ -34,6 +35,12 @@ export class UsersController {
   @Get('profile')
   getProfile(@Request() req: any) {
     return this.usersService.findOne(req.user.userId);
+  }
+
+  @Get('search')
+  search(@Query('q') q: string, @Request() req: any) {
+    if (!q || q.trim().length < 2) return [];
+    return this.usersService.search(q.trim(), req.user.userId);
   }
 
   @Get('trainers')

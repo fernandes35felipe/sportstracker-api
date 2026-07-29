@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, ILike } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
 import { User } from './entities/user.entity';
@@ -52,5 +52,18 @@ export class UsersService {
 
   async findByRole(role: string): Promise<User[]> {
     return this.userRepo.find({ where: { role } });
+  }
+
+  async search(q: string, excludeId?: string): Promise<User[]> {
+    const results = await this.userRepo.find({
+      where: [
+        { fullName: ILike(`%${q}%`) },
+        { email: ILike(`%${q}%`) },
+        { id: q },
+      ],
+      take: 20,
+    });
+    if (excludeId) return results.filter((u) => u.id !== excludeId);
+    return results;
   }
 }
