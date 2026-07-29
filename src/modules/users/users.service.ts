@@ -49,4 +49,8 @@ export class UsersService {
   async findAthletesByTrainer(trainerId: string): Promise<User[]> {
     return this.userRepo.find({ where: { role: 'athlete', trainerId } });
   }
+
+  async findByRole(role: string): Promise<User[]> {
+    return this.userRepo.find({ where: { role } });
+  }
 }
