@@ -30,17 +30,28 @@ import { PhysicalEvaluation } from './modules/physical-evaluations/entities/phys
     ]),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres',
-        host: config.get<string>('DATABASE_HOST'),
-        port: config.get<number>('DATABASE_PORT'),
-        username: config.get<string>('DATABASE_USER'),
-        password: config.get<string>('DATABASE_PASSWORD'),
-        database: config.get<string>('DATABASE_NAME'),
-        entities: [User, Workout, Exercise, Goal, TrainerAthleteRelation, EvolutionPhoto, PhysicalEvaluation],
-        synchronize: true,
-        ssl: false,
-      }),
+      useFactory: (config: ConfigService) => {
+        const url = config.get<string>('DATABASE_URL');
+        const base = {
+          type: 'postgres' as const,
+          entities: [User, Workout, Exercise, Goal, TrainerAthleteRelation, EvolutionPhoto, PhysicalEvaluation],
+          synchronize: true,
+          ssl: false,
+          retryAttempts: 5,
+          retryDelay: 3000,
+        };
+        if (url) {
+          return { ...base, url };
+        }
+        return {
+          ...base,
+          host: config.get<string>('DATABASE_HOST'),
+          port: config.get<number>('DATABASE_PORT'),
+          username: config.get<string>('DATABASE_USER'),
+          password: config.get<string>('DATABASE_PASSWORD'),
+          database: config.get<string>('DATABASE_NAME'),
+        };
+      },
       inject: [ConfigService],
     }),
     AuthModule,
