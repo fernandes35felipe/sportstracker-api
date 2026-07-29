@@ -15,7 +15,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import { EvolutionPhotosService } from './evolution-photos.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -30,7 +30,7 @@ export class EvolutionPhotosController {
       storage: diskStorage({
         destination: './uploads/evolution',
         filename: (_req, file, cb) => {
-          cb(null, `${uuidv4()}${extname(file.originalname)}`);
+          cb(null, `${randomUUID()}${extname(file.originalname)}`);
         },
       }),
       fileFilter: (_req, file, cb) => {
