@@ -32,6 +32,12 @@ export class PhysicalEvaluation {
   @Column({ name: 'evaluation_date', type: 'date', nullable: true })
   evaluationDate: string;
 
+  @Column({ name: 'sport_type', nullable: true })
+  sportType: string;
+
+  @Column({ name: 'template_key', nullable: true })
+  templateKey: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

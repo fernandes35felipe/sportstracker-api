@@ -4,6 +4,7 @@ import { Repository, In } from 'typeorm';
 
 import { Workout } from './entities/workout.entity';
 import { User } from '../users/entities/user.entity';
+import { Exercise } from '../exercises/entities/exercise.entity';
 import { CreateWorkoutDto } from './dto/create-workout.dto';
 import { UpdateWorkoutDto } from './dto/update-workout.dto';
 
@@ -12,6 +13,7 @@ export class WorkoutsService {
   constructor(
     @InjectRepository(Workout) private workoutRepo: Repository<Workout>,
     @InjectRepository(User) private userRepo: Repository<User>,
+    @InjectRepository(Exercise) private exerciseRepo: Repository<Exercise>,
   ) {}
 
   async create(createWorkoutDto: CreateWorkoutDto, userId: string, userRole: string): Promise<Workout> {
@@ -125,6 +127,56 @@ export class WorkoutsService {
     }
 
     await this.workoutRepo.delete(id);
+  }
+
+  async addExerciseFromLibrary(
+    workoutId: string,
+    exerciseId: string,
+    details: { sets: number; reps: string; rest?: string; notes?: string },
+    userId: string,
+    userRole: string,
+  ): Promise<Workout> {
+    const workout = await this.workoutRepo.findOne({
+      where: { id: workoutId },
+      relations: { assignedTo: true },
+    });
+    if (!workout) throw new NotFoundException('Treino não encontrado');
+
+    if (userRole === 'trainer' && workout.createdById !== userId) {
+      throw new ForbiddenException('Apenas o criador do treino pode adicionar exercícios');
+    }
+
+    const exercise = await this.exerciseRepo.findOne({ where: { id: exerciseId } });
+    if (!exercise) throw new NotFoundException('Exercício não encontrado na biblioteca');
+
+    const item = {
+      exerciseId: exercise.id,
+      name: exercise.name,
+      sets: details.sets,
+      reps: details.reps,
+      rest: details.rest,
+      notes: details.notes,
+    };
+
+    workout.exercises = [...(workout.exercises ?? []), item];
+    return this.workoutRepo.save(workout);
+  }
+
+  async removeExerciseFromWorkout(
+    workoutId: string,
+    exerciseIndex: number,
+    userId: string,
+    userRole: string,
+  ): Promise<Workout> {
+    const workout = await this.workoutRepo.findOne({ where: { id: workoutId } });
+    if (!workout) throw new NotFoundException('Treino não encontrado');
+
+    if (userRole === 'trainer' && workout.createdById !== userId) {
+      throw new ForbiddenException('Apenas o criador do treino pode remover exercícios');
+    }
+
+    workout.exercises = workout.exercises.filter((_, i) => i !== exerciseIndex);
+    return this.workoutRepo.save(workout);
   }
 
   async markAsCompleted(id: string, userId: string): Promise<Workout> {

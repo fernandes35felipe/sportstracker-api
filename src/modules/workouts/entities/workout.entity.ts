@@ -12,6 +12,7 @@ import {
 import { User } from '../../users/entities/user.entity';
 
 export interface WorkoutExerciseItem {
+  exerciseId?: string;
   name: string;
   sets: number;
   reps: string;

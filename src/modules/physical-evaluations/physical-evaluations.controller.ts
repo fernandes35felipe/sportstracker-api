@@ -27,6 +27,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 export class PhysicalEvaluationsController {
   constructor(private readonly service: PhysicalEvaluationsService) {}
 
+  @Get('templates')
+  getTemplates() {
+    return this.service.getTemplates();
+  }
+
   @Post()
   create(@Request() req: any, @Body() dto: CreateEvaluationDto) {
     return this.service.create(req.user.userId, dto);

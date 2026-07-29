@@ -18,4 +18,12 @@ export class CreateEvaluationDto {
   @IsDateString()
   @IsOptional()
   evaluationDate?: string;
+
+  @IsString()
+  @IsOptional()
+  sportType?: string;
+
+  @IsString()
+  @IsOptional()
+  templateKey?: string;
 }

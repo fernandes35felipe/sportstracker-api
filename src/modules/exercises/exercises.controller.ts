@@ -20,6 +20,13 @@ export class ExercisesController {
     return this.exercisesService.findAll(userId);
   }
 
+  // Must come before :id to avoid route conflict
+  @UseGuards(JwtAuthGuard)
+  @Get('my-library')
+  findMyLibrary(@Request() req) {
+    return this.exercisesService.findMyLibrary(req.user.userId);
+  }
+
   @Get('category/:category')
   findByCategory(@Param('category') category: string, @Query('userId') userId?: string) {
     return this.exercisesService.findByCategory(category, userId);
@@ -32,13 +39,13 @@ export class ExercisesController {
 
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateExerciseDto: UpdateExerciseDto) {
-    return this.exercisesService.update(id, updateExerciseDto);
+  update(@Param('id') id: string, @Body() updateExerciseDto: UpdateExerciseDto, @Request() req) {
+    return this.exercisesService.update(id, updateExerciseDto, req.user.userId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.exercisesService.remove(id);
+  remove(@Param('id') id: string, @Request() req) {
+    return this.exercisesService.remove(id, req.user.userId);
   }
 }
