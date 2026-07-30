@@ -47,6 +47,9 @@ export class User {
   @Column({ name: 'is_active', default: true })
   isActive: boolean;
 
+  @Column({ name: 'pix_key', nullable: true })
+  pixKey: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

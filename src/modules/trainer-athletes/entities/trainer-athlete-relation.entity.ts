@@ -28,6 +28,19 @@ export class TrainerAthleteRelation {
   @Column({ type: 'text', nullable: true })
   message: string;
 
+  // Admin fields — managed by trainer, visible to trainer only (except paymentStatus/planName/planValue which athlete can see)
+  @Column({ name: 'payment_status', default: 'pendente', nullable: true })
+  paymentStatus: string; // 'pago' | 'pendente' | 'atrasado'
+
+  @Column({ name: 'plan_name', nullable: true })
+  planName: string;
+
+  @Column({ name: 'plan_value', type: 'decimal', precision: 10, scale: 2, nullable: true })
+  planValue: number;
+
+  @Column({ name: 'admin_notes', type: 'text', nullable: true })
+  adminNotes: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

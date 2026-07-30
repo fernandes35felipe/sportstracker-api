@@ -35,8 +35,22 @@ export class WorkoutsService {
     return this.workoutRepo.save(workout);
   }
 
-  async findAll(userId: string, userRole: string): Promise<Workout[]> {
+  async findAll(userId: string, userRole: string, athleteId?: string): Promise<Workout[]> {
     if (userRole === 'trainer') {
+      if (athleteId) {
+        return this.workoutRepo
+          .createQueryBuilder('workout')
+          .leftJoinAndSelect('workout.createdBy', 'creator')
+          .leftJoinAndSelect('workout.assignedTo', 'assigned')
+          .where('workout.createdById = :userId', { userId })
+          .andWhere(
+            `workout.id IN (
+              SELECT wau.workout_id FROM workout_assigned_users wau WHERE wau.user_id = :athleteId
+            )`,
+            { athleteId },
+          )
+          .getMany();
+      }
       return this.workoutRepo.find({
         where: { createdById: userId },
         relations: { createdBy: true, assignedTo: true },

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Request, ForbiddenException } from '@nestjs/common';
 import { TrainerAthletesService } from './trainer-athletes.service';
 import { CreateRelationDto } from './dto/create-relation.dto';
 import { SendRequestDto } from './dto/send-request.dto';
@@ -53,6 +53,12 @@ export class TrainerAthletesController {
   @Get('status/:trainerId')
   getRequestStatus(@Param('trainerId') trainerId: string, @Request() req: any) {
     return this.service.getRequestStatus(req.user.userId, trainerId);
+  }
+
+  // Trainer updates administrative details for a relation (payment, plan, notes)
+  @Patch(':id/admin')
+  updateAdminDetails(@Param('id') id: string, @Body() body: any, @Request() req: any) {
+    return this.service.updateAdminDetails(id, req.user.userId, body);
   }
 
   @Delete(':id')

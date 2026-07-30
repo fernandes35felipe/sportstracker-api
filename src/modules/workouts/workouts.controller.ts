@@ -16,8 +16,8 @@ export class WorkoutsController {
   }
 
   @Get()
-  findAll(@Request() req) {
-    return this.workoutsService.findAll(req.user.userId, req.user.role);
+  findAll(@Request() req, @Query('athleteId') athleteId?: string) {
+    return this.workoutsService.findAll(req.user.userId, req.user.role, athleteId);
   }
 
   @Get(':id')

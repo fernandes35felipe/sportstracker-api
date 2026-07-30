@@ -110,7 +110,14 @@ export class TrainerAthletesService {
       relations.map(async (r) => {
         try {
           const user = await this.usersService.findOne(r.athleteId);
-          return { ...user, relationId: r.id };
+          return {
+            ...user,
+            relationId: r.id,
+            paymentStatus: r.paymentStatus ?? 'pendente',
+            planName: r.planName ?? null,
+            planValue: r.planValue != null ? Number(r.planValue) : null,
+            adminNotes: r.adminNotes ?? null,
+          };
         } catch {
           return null;
         }
@@ -127,13 +134,35 @@ export class TrainerAthletesService {
       relations.map(async (r) => {
         try {
           const user = await this.usersService.findOne(r.trainerId);
-          return { ...user, relationId: r.id, requestStatus: r.status };
+          return {
+            ...user,
+            relationId: r.id,
+            requestStatus: r.status,
+            paymentStatus: r.paymentStatus ?? 'pendente',
+            planName: r.planName ?? null,
+            planValue: r.planValue != null ? Number(r.planValue) : null,
+          };
         } catch {
           return null;
         }
       }),
     );
     return trainers.filter(Boolean);
+  }
+
+  async updateAdminDetails(
+    id: string,
+    trainerId: string,
+    dto: { paymentStatus?: string; planName?: string; planValue?: number; adminNotes?: string },
+  ): Promise<TrainerAthleteRelation> {
+    const relation = await this.relationRepo.findOne({ where: { id } });
+    if (!relation) throw new NotFoundException('Relação não encontrada');
+    if (relation.trainerId !== trainerId) throw new ForbiddenException('Sem permissão');
+    if (dto.paymentStatus !== undefined) relation.paymentStatus = dto.paymentStatus;
+    if (dto.planName !== undefined) relation.planName = dto.planName;
+    if (dto.planValue !== undefined) relation.planValue = dto.planValue;
+    if (dto.adminNotes !== undefined) relation.adminNotes = dto.adminNotes;
+    return this.relationRepo.save(relation);
   }
 
   async removeRelation(id: string, requesterId: string): Promise<void> {
