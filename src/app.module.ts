@@ -1,5 +1,7 @@
-import { Module } from '@nestjs/common';
+import { Module, OnApplicationBootstrap } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -78,4 +80,30 @@ import { SportsGroupSession } from './modules/sports-groups/entities/sports-grou
     { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
-export class AppModule {}
+export class AppModule implements OnApplicationBootstrap {
+  constructor(@InjectDataSource() private dataSource: DataSource) {}
+
+  async onApplicationBootstrap() {
+    // Safety net: ensure sports-API-specific columns exist even if the users table
+    // was created by another service (wallet/planner) before this API restarted.
+    // synchronize:true handles new deploys, but this covers the "stale connection
+    // after DB wipe" scenario where sync already ran against an older schema.
+    const safeAlter = async (sql: string) => {
+      try { await this.dataSource.query(sql); } catch { /* column already exists */ }
+    };
+
+    await safeAlter(`ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR DEFAULT 'athlete'`);
+    await safeAlter(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_trainer BOOLEAN DEFAULT false`);
+    await safeAlter(`ALTER TABLE users ADD COLUMN IF NOT EXISTS bio TEXT`);
+    await safeAlter(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT`);
+    await safeAlter(`ALTER TABLE users ADD COLUMN IF NOT EXISTS weight FLOAT`);
+    await safeAlter(`ALTER TABLE users ADD COLUMN IF NOT EXISTS height FLOAT`);
+    await safeAlter(`ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER`);
+    await safeAlter(`ALTER TABLE users ADD COLUMN IF NOT EXISTS trainer_id UUID`);
+    await safeAlter(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true`);
+    await safeAlter(`ALTER TABLE users ADD COLUMN IF NOT EXISTS pix_key VARCHAR`);
+    await safeAlter(`ALTER TABLE users ALTER COLUMN password DROP NOT NULL`);
+
+    console.log('[Sports API] Bootstrap done.');
+  }
+}
