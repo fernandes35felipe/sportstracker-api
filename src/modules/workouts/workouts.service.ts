@@ -3,17 +3,28 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
 
 import { Workout } from './entities/workout.entity';
+import { WorkoutExerciseLog } from './entities/workout-exercise-log.entity';
+import { WorkoutNotificationsService } from './workout-notifications.service';
 import { User } from '../users/entities/user.entity';
 import { Exercise } from '../exercises/entities/exercise.entity';
 import { CreateWorkoutDto } from './dto/create-workout.dto';
 import { UpdateWorkoutDto } from './dto/update-workout.dto';
 
+export interface ExerciseLogEntry {
+  exerciseName: string;
+  exerciseId?: string;
+  weight?: number;
+  actualReps?: string;
+}
+
 @Injectable()
 export class WorkoutsService {
   constructor(
     @InjectRepository(Workout) private workoutRepo: Repository<Workout>,
+    @InjectRepository(WorkoutExerciseLog) private logRepo: Repository<WorkoutExerciseLog>,
     @InjectRepository(User) private userRepo: Repository<User>,
     @InjectRepository(Exercise) private exerciseRepo: Repository<Exercise>,
+    private notifications: WorkoutNotificationsService,
   ) {}
 
   async create(createWorkoutDto: CreateWorkoutDto, userId: string, userRole: string): Promise<Workout> {
@@ -25,14 +36,22 @@ export class WorkoutsService {
       ? await this.userRepo.findBy({ id: In(assignedToIds) })
       : [];
 
-    // Athletes auto-assign themselves so they can track and complete their own workouts
     if (userRole !== 'trainer' && !assignedUsers.some(u => u.id === userId)) {
       const self = await this.userRepo.findOne({ where: { id: userId } });
       if (self) assignedUsers = [self, ...assignedUsers];
     }
 
     workout.assignedTo = assignedUsers;
-    return this.workoutRepo.save(workout);
+    const saved = await this.workoutRepo.save(workout);
+
+    if (userRole === 'trainer' && assignedUsers.length) {
+      const trainer = await this.userRepo.findOne({ where: { id: userId } });
+      const trainerName = trainer?.fullName ?? 'Seu treinador';
+      const athleteIds = assignedUsers.map(u => u.id);
+      this.notifications.notifyWorkoutAssigned(saved.id, saved.name, trainerName, athleteIds).catch(() => null);
+    }
+
+    return saved;
   }
 
   async findAll(userId: string, userRole: string, athleteId?: string): Promise<Workout[]> {
@@ -57,7 +76,6 @@ export class WorkoutsService {
       });
     }
 
-    // Athletes see workouts assigned to them AND workouts they created themselves
     const [assigned, selfCreated] = await Promise.all([
       this.workoutRepo
         .createQueryBuilder('workout')
@@ -114,6 +132,8 @@ export class WorkoutsService {
       throw new ForbiddenException('Access denied');
     }
 
+    const prevIds = new Set(workout.assignedTo.map(u => u.id));
+
     const { assignedTo: assignedToIds, ...rest } = updateWorkoutDto;
     Object.assign(workout, rest);
 
@@ -124,6 +144,16 @@ export class WorkoutsService {
     }
 
     await this.workoutRepo.save(workout);
+
+    // Notify newly added athletes
+    if (userRole === 'trainer' && assignedToIds?.length) {
+      const newAthleteIds = workout.assignedTo.filter(u => !prevIds.has(u.id)).map(u => u.id);
+      if (newAthleteIds.length) {
+        const trainer = await this.userRepo.findOne({ where: { id: userId } });
+        const trainerName = trainer?.fullName ?? 'Seu treinador';
+        this.notifications.notifyWorkoutAssigned(id, workout.name, trainerName, newAthleteIds).catch(() => null);
+      }
+    }
 
     return this.workoutRepo.findOne({
       where: { id },
@@ -193,6 +223,38 @@ export class WorkoutsService {
     return this.workoutRepo.save(workout);
   }
 
+  async clone(id: string, userId: string, userRole: string, targetAthleteIds?: string[]): Promise<Workout> {
+    const original = await this.workoutRepo.findOne({
+      where: { id },
+      relations: { assignedTo: true },
+    });
+    if (!original) throw new NotFoundException('Workout not found');
+    if (userRole === 'trainer' && original.createdById !== userId) {
+      throw new ForbiddenException('Access denied');
+    }
+
+    const cloned = this.workoutRepo.create({
+      name: `${original.name} (cópia)`,
+      description: original.description,
+      duration: original.duration,
+      restTime: original.restTime,
+      difficulty: original.difficulty,
+      category: original.category,
+      exercises: original.exercises ? JSON.parse(JSON.stringify(original.exercises)) : [],
+      scheduledDate: null,
+      createdById: userId,
+      completed: false,
+    });
+
+    if (targetAthleteIds?.length) {
+      cloned.assignedTo = await this.userRepo.findBy({ id: In(targetAthleteIds) });
+    } else {
+      cloned.assignedTo = [];
+    }
+
+    return this.workoutRepo.save(cloned);
+  }
+
   async markAsCompleted(id: string, userId: string): Promise<Workout> {
     const workout = await this.workoutRepo
       .createQueryBuilder('workout')
@@ -212,5 +274,49 @@ export class WorkoutsService {
     workout.completedAt = new Date();
 
     return this.workoutRepo.save(workout);
+  }
+
+  async logExercises(
+    workoutId: string,
+    userId: string,
+    entries: ExerciseLogEntry[],
+  ): Promise<WorkoutExerciseLog[]> {
+    const records = entries
+      .filter(e => e.exerciseName && (e.weight != null || e.actualReps))
+      .map(e =>
+        this.logRepo.create({
+          workoutId,
+          userId,
+          exerciseName: e.exerciseName,
+          exerciseId: e.exerciseId ?? null,
+          weight: e.weight ?? null,
+          actualReps: e.actualReps ?? null,
+        }),
+      );
+
+    if (!records.length) return [];
+    return this.logRepo.save(records);
+  }
+
+  async getExerciseHistory(
+    userId: string,
+    exerciseName?: string,
+  ): Promise<{ exerciseName: string; entries: WorkoutExerciseLog[] }[]> {
+    const where: any = { userId };
+    if (exerciseName) where.exerciseName = exerciseName;
+
+    const logs = await this.logRepo.find({
+      where,
+      order: { loggedAt: 'ASC' },
+    });
+
+    const grouped = new Map<string, WorkoutExerciseLog[]>();
+    for (const log of logs) {
+      const group = grouped.get(log.exerciseName) ?? [];
+      group.push(log);
+      grouped.set(log.exerciseName, group);
+    }
+
+    return Array.from(grouped.entries()).map(([name, entries]) => ({ exerciseName: name, entries }));
   }
 }

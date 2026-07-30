@@ -129,4 +129,32 @@ export class SportsGroupsController {
   ) {
     return this.service.deleteSession(id, sessionId, req.user.userId);
   }
+
+  // ── Session Feedback ──────────────────────────────────────────────────────
+
+  @Post(':id/sessions/:sessionId/feedback')
+  submitFeedback(
+    @Param('id') id: string,
+    @Param('sessionId') sessionId: string,
+    @Request() req: any,
+    @Body() dto: any,
+  ) {
+    return this.service.submitFeedback(id, sessionId, req.user.userId, dto);
+  }
+
+  @Get(':id/sessions/:sessionId/feedback')
+  getSessionFeedbacks(
+    @Param('id') id: string,
+    @Param('sessionId') sessionId: string,
+    @Request() req: any,
+  ) {
+    return this.service.getSessionFeedbacks(id, sessionId, req.user.userId);
+  }
+
+  // ── Attendance Report ─────────────────────────────────────────────────────
+
+  @Get(':id/attendance')
+  getAttendanceReport(@Param('id') id: string, @Request() req: any) {
+    return this.service.getAttendanceReport(id, req.user.userId);
+  }
 }

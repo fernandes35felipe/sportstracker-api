@@ -2,6 +2,7 @@ import { Module, OnApplicationBootstrap } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
@@ -19,6 +20,7 @@ import { SportsGroupsModule } from './modules/sports-groups/sports-groups.module
 
 import { User } from './modules/users/entities/user.entity';
 import { Workout } from './modules/workouts/entities/workout.entity';
+import { WorkoutExerciseLog } from './modules/workouts/entities/workout-exercise-log.entity';
 import { Exercise } from './modules/exercises/entities/exercise.entity';
 import { Goal } from './modules/goals/entities/goal.entity';
 import { TrainerAthleteRelation } from './modules/trainer-athletes/entities/trainer-athlete-relation.entity';
@@ -28,6 +30,7 @@ import { SportsGroup } from './modules/sports-groups/entities/sports-group.entit
 import { SportsGroupMember } from './modules/sports-groups/entities/sports-group-member.entity';
 import { SportsGroupClass } from './modules/sports-groups/entities/sports-group-class.entity';
 import { SportsGroupSession } from './modules/sports-groups/entities/sports-group-session.entity';
+import { SportsGroupSessionFeedback } from './modules/sports-groups/entities/sports-group-session-feedback.entity';
 
 @Module({
   imports: [
@@ -42,9 +45,10 @@ import { SportsGroupSession } from './modules/sports-groups/entities/sports-grou
         const base = {
           type: 'postgres' as const,
           entities: [
-            User, Workout, Exercise, Goal, TrainerAthleteRelation,
+            User, Workout, WorkoutExerciseLog, Exercise, Goal, TrainerAthleteRelation,
             EvolutionPhoto, PhysicalEvaluation,
             SportsGroup, SportsGroupMember, SportsGroupClass, SportsGroupSession,
+            SportsGroupSessionFeedback,
           ],
           synchronize: true,
           ssl: false,
@@ -65,6 +69,7 @@ import { SportsGroupSession } from './modules/sports-groups/entities/sports-grou
       },
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
     AuthModule,
     UsersModule,
     WorkoutsModule,
@@ -102,6 +107,8 @@ export class AppModule implements OnApplicationBootstrap {
     await safeAlter(`ALTER TABLE users ADD COLUMN IF NOT EXISTS trainer_id UUID`);
     await safeAlter(`ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true`);
     await safeAlter(`ALTER TABLE users ADD COLUMN IF NOT EXISTS pix_key VARCHAR`);
+    await safeAlter(`ALTER TABLE users ADD COLUMN IF NOT EXISTS birth_date DATE`);
+    await safeAlter(`ALTER TABLE users ADD COLUMN IF NOT EXISTS next_evaluation_date DATE`);
     await safeAlter(`ALTER TABLE users ALTER COLUMN password DROP NOT NULL`);
 
     console.log('[Sports API] Bootstrap done.');

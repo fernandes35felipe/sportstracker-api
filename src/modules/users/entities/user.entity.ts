@@ -50,6 +50,12 @@ export class User {
   @Column({ name: 'pix_key', nullable: true })
   pixKey: string;
 
+  @Column({ name: 'birth_date', type: 'date', nullable: true })
+  birthDate: string;
+
+  @Column({ name: 'next_evaluation_date', type: 'date', nullable: true })
+  nextEvaluationDate: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

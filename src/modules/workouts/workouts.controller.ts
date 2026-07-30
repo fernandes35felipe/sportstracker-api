@@ -35,6 +35,15 @@ export class WorkoutsController {
     return this.workoutsService.remove(id, req.user.userId, req.user.role);
   }
 
+  @Post(':id/clone')
+  clone(
+    @Param('id') id: string,
+    @Body() body: { targetAthleteIds?: string[] },
+    @Request() req,
+  ) {
+    return this.workoutsService.clone(id, req.user.userId, req.user.role, body.targetAthleteIds);
+  }
+
   @Patch(':id/complete')
   markAsCompleted(@Param('id') id: string, @Request() req) {
     return this.workoutsService.markAsCompleted(id, req.user.userId);
@@ -59,5 +68,19 @@ export class WorkoutsController {
     @Request() req,
   ) {
     return this.workoutsService.removeExerciseFromWorkout(id, index, req.user.userId, req.user.role);
+  }
+
+  @Post(':id/exercise-logs')
+  logExercises(
+    @Param('id') id: string,
+    @Body() body: { logs: { exerciseName: string; exerciseId?: string; weight?: number; actualReps?: string }[] },
+    @Request() req,
+  ) {
+    return this.workoutsService.logExercises(id, req.user.userId, body.logs ?? []);
+  }
+
+  @Get('exercise-history')
+  getExerciseHistory(@Request() req, @Query('exerciseName') exerciseName?: string) {
+    return this.workoutsService.getExerciseHistory(req.user.userId, exerciseName);
   }
 }

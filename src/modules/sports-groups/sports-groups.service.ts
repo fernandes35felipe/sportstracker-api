@@ -10,6 +10,7 @@ import { SportsGroup } from './entities/sports-group.entity';
 import { SportsGroupMember } from './entities/sports-group-member.entity';
 import { SportsGroupClass } from './entities/sports-group-class.entity';
 import { SportsGroupSession } from './entities/sports-group-session.entity';
+import { SportsGroupSessionFeedback } from './entities/sports-group-session-feedback.entity';
 
 const CYCLE_DAYS: Record<string, number> = {
   weekly: 7,
@@ -64,6 +65,8 @@ export class SportsGroupsService {
     private readonly classRepo: Repository<SportsGroupClass>,
     @InjectRepository(SportsGroupSession)
     private readonly sessionRepo: Repository<SportsGroupSession>,
+    @InjectRepository(SportsGroupSessionFeedback)
+    private readonly feedbackRepo: Repository<SportsGroupSessionFeedback>,
   ) {}
 
   async createGroup(userId: string, dto: any): Promise<any> {
@@ -335,6 +338,112 @@ export class SportsGroupsService {
     }
 
     await this.sessionRepo.remove(session);
+  }
+
+  // ── Session Feedback ──────────────────────────────────────────────────────
+
+  async submitFeedback(
+    groupId: string,
+    sessionId: string,
+    userId: string,
+    dto: { memberId: string; attended: boolean; rating?: number; note?: string },
+  ): Promise<SportsGroupSessionFeedback> {
+    const session = await this.sessionRepo.findOne({ where: { id: sessionId, groupId } });
+    if (!session) throw new NotFoundException('Sessão não encontrada');
+
+    const member = await this.memberRepo.findOne({ where: { id: dto.memberId, groupId } });
+    if (!member) throw new NotFoundException('Membro não encontrado');
+
+    // Allow: the member themselves (via userId) or an admin/trainer
+    const myMembership = await this.memberRepo.findOne({ where: { groupId, userId } });
+    const isSelf = member.userId === userId;
+    const isAdminOrTrainer = myMembership && ['admin', 'trainer'].includes(myMembership.role);
+    if (!isSelf && !isAdminOrTrainer) throw new ForbiddenException('Sem permissão');
+
+    const existing = await this.feedbackRepo.findOne({
+      where: { sessionId, memberId: dto.memberId },
+    });
+
+    if (existing) {
+      Object.assign(existing, {
+        attended: dto.attended,
+        rating: dto.rating ?? existing.rating,
+        note: dto.note ?? existing.note,
+      });
+      return this.feedbackRepo.save(existing);
+    }
+
+    return this.feedbackRepo.save(
+      this.feedbackRepo.create({
+        sessionId,
+        memberId: dto.memberId,
+        attended: dto.attended,
+        rating: dto.rating,
+        note: dto.note,
+      }),
+    );
+  }
+
+  async getSessionFeedbacks(groupId: string, sessionId: string, userId: string): Promise<any[]> {
+    const session = await this.sessionRepo.findOne({ where: { id: sessionId, groupId } });
+    if (!session) throw new NotFoundException('Sessão não encontrada');
+
+    const membership = await this.memberRepo.findOne({ where: { groupId, userId } });
+    if (!membership) throw new ForbiddenException('Acesso negado');
+
+    const feedbacks = await this.feedbackRepo.find({
+      where: { sessionId },
+      relations: { member: { user: true } },
+    });
+
+    return feedbacks.map((f) => ({
+      ...f,
+      member: serializeMember(f.member),
+    }));
+  }
+
+  // ── Attendance Report ─────────────────────────────────────────────────────
+
+  async getAttendanceReport(groupId: string, userId: string): Promise<any> {
+    const group = await this.groupRepo.findOne({ where: { id: groupId } });
+    if (!group) throw new NotFoundException('Grupo não encontrado');
+
+    const membership = await this.memberRepo.findOne({ where: { groupId, userId } });
+    if (!membership && group.createdById !== userId) throw new ForbiddenException('Acesso negado');
+
+    const sessions = await this.sessionRepo.find({ where: { groupId } });
+    const members = await this.memberRepo.find({
+      where: { groupId },
+      relations: { user: true },
+    });
+
+    const feedbacks = await this.feedbackRepo.find({
+      where: { session: { groupId } },
+      relations: { session: true },
+    });
+
+    const totalSessions = sessions.length;
+
+    const report = members.map((m) => {
+      const memberFeedbacks = feedbacks.filter((f) => f.memberId === m.id);
+      const attended = memberFeedbacks.filter((f) => f.attended).length;
+      const feedbackCount = memberFeedbacks.length;
+      const percentage = totalSessions > 0 ? Math.round((attended / totalSessions) * 100) : null;
+      const avgRating = feedbackCount > 0
+        ? +(memberFeedbacks.filter((f) => f.rating).reduce((s, f) => s + f.rating, 0) / feedbackCount).toFixed(1)
+        : null;
+
+      return {
+        member: serializeMember(m),
+        totalSessions,
+        attended,
+        feedbackCount,
+        percentage,
+        avgRating,
+      };
+    });
+
+    return { groupId, totalSessions, members: report };
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────

@@ -46,4 +46,12 @@ export class UpdateUserDto {
   @IsOptional()
   @IsBoolean()
   isTrainer?: boolean;
+
+  @IsOptional()
+  @IsString()
+  birthDate?: string;
+
+  @IsOptional()
+  @IsString()
+  nextEvaluationDate?: string;
 }
