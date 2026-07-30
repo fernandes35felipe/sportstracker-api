@@ -11,6 +11,48 @@ import { SportsGroupMember } from './entities/sports-group-member.entity';
 import { SportsGroupClass } from './entities/sports-group-class.entity';
 import { SportsGroupSession } from './entities/sports-group-session.entity';
 
+const CYCLE_DAYS: Record<string, number> = {
+  weekly: 7,
+  biweekly: 14,
+  monthly: 30,
+  quarterly: 90,
+  annually: 365,
+};
+
+function computeNextPaymentDate(cycle: string): string {
+  const d = new Date();
+  d.setDate(d.getDate() + (CYCLE_DAYS[cycle] ?? 30));
+  return d.toISOString().split('T')[0];
+}
+
+function effectivePaymentStatus(m: SportsGroupMember): string | null {
+  if (m.paymentStatus === 'pago' && m.nextPaymentDate) {
+    const due = new Date(m.nextPaymentDate);
+    due.setHours(23, 59, 59);
+    if (due < new Date()) return 'atrasado';
+  }
+  return m.paymentStatus;
+}
+
+function mapUser(user: any): { id: string; name: string; email: string; avatar?: string } | null {
+  if (!user) return null;
+  return {
+    id: user.id,
+    name: user.fullName ?? user.name ?? user.email,
+    email: user.email,
+    avatar: user.avatar ?? null,
+  };
+}
+
+function serializeMember(m: SportsGroupMember): any {
+  return {
+    ...m,
+    planValue: m.planValue != null ? Number(m.planValue) : null,
+    user: mapUser(m.user),
+    effectivePaymentStatus: effectivePaymentStatus(m),
+  };
+}
+
 @Injectable()
 export class SportsGroupsService {
   constructor(
@@ -54,9 +96,7 @@ export class SportsGroupsService {
 
     return Promise.all(
       groups.map(async (group) => {
-        const memberCount = await this.memberRepo.count({
-          where: { groupId: group.id },
-        });
+        const memberCount = await this.memberRepo.count({ where: { groupId: group.id } });
         const mine = memberships.find((m) => m.groupId === group.id);
         return { ...group, memberCount, myRole: mine?.role ?? null };
       }),
@@ -67,9 +107,7 @@ export class SportsGroupsService {
     const group = await this.groupRepo.findOne({ where: { id } });
     if (!group) throw new NotFoundException('Grupo não encontrado');
 
-    const membership = await this.memberRepo.findOne({
-      where: { groupId: id, userId },
-    });
+    const membership = await this.memberRepo.findOne({ where: { groupId: id, userId } });
 
     if (group.visibility === 'private' && !membership && group.createdById !== userId) {
       throw new ForbiddenException('Acesso negado');
@@ -95,11 +133,12 @@ export class SportsGroupsService {
 
     return {
       ...group,
-      members: members.map((m) => ({
-        ...m,
-        planValue: m.planValue != null ? Number(m.planValue) : null,
+      members: members.map(serializeMember),
+      classes: classes.map((cls) => ({
+        ...cls,
+        trainer: mapUser(cls.trainer),
+        enrolledMembers: cls.enrolledMembers.map(serializeMember),
       })),
-      classes,
       sessions,
       myRole: membership?.role ?? null,
     };
@@ -128,62 +167,67 @@ export class SportsGroupsService {
   async addMember(groupId: string, userId: string, dto: any): Promise<SportsGroupMember> {
     await this.assertAdminOrTrainer(groupId, userId);
 
-    if (dto.isFictional) {
-      const member = this.memberRepo.create({
-        groupId,
-        isFictional: true,
-        fictionalName: dto.fictionalName,
-        fictionalEmail: dto.fictionalEmail,
-        fictionalPhone: dto.fictionalPhone,
-        fictionalNotes: dto.fictionalNotes,
-        role: dto.role ?? 'athlete',
-        customRole: dto.customRole,
-        schedule: dto.schedule,
-        paymentStatus: dto.paymentStatus,
-        planName: dto.planName,
-        planValue: dto.planValue,
-      });
-      return this.memberRepo.save(member);
-    }
-
-    const existing = await this.memberRepo.findOne({
-      where: { groupId, userId: dto.userId },
-    });
-    if (existing) throw new ConflictException('Usuário já é membro do grupo');
-
-    const member = this.memberRepo.create({
-      groupId,
-      userId: dto.userId,
+    const base = {
       role: dto.role ?? 'athlete',
       customRole: dto.customRole,
       schedule: dto.schedule,
       paymentStatus: dto.paymentStatus,
       planName: dto.planName,
       planValue: dto.planValue,
-    });
-    return this.memberRepo.save(member);
+      billingCycle: dto.billingCycle,
+      cycleStartDate: dto.cycleStartDate,
+      nextPaymentDate: this.resolveNextPaymentDate(dto),
+    };
+
+    if (dto.isFictional) {
+      return this.memberRepo.save(
+        this.memberRepo.create({
+          groupId,
+          isFictional: true,
+          fictionalName: dto.fictionalName,
+          fictionalEmail: dto.fictionalEmail,
+          fictionalPhone: dto.fictionalPhone,
+          fictionalNotes: dto.fictionalNotes,
+          ...base,
+        }),
+      );
+    }
+
+    const existing = await this.memberRepo.findOne({ where: { groupId, userId: dto.userId } });
+    if (existing) throw new ConflictException('Usuário já é membro do grupo');
+
+    return this.memberRepo.save(
+      this.memberRepo.create({ groupId, userId: dto.userId, ...base }),
+    );
   }
 
-  async updateMember(
-    groupId: string,
-    memberId: string,
-    userId: string,
-    dto: any,
-  ): Promise<SportsGroupMember> {
+  async updateMember(groupId: string, memberId: string, userId: string, dto: any): Promise<any> {
     await this.assertAdminOrTrainer(groupId, userId);
-    const member = await this.memberRepo.findOne({
-      where: { id: memberId, groupId },
-    });
+    const member = await this.memberRepo.findOne({ where: { id: memberId, groupId } });
     if (!member) throw new NotFoundException('Membro não encontrado');
+
+    // When marking as paid, auto-calculate next payment date
+    if (dto.paymentStatus === 'pago') {
+      const cycle = dto.billingCycle ?? member.billingCycle;
+      if (cycle) {
+        dto.nextPaymentDate = computeNextPaymentDate(cycle);
+        dto.cycleStartDate = new Date().toISOString().split('T')[0];
+      }
+    }
+
+    // When manually clearing payment, reset next payment date
+    if (dto.paymentStatus && dto.paymentStatus !== 'pago') {
+      dto.nextPaymentDate = null;
+    }
+
     Object.assign(member, dto);
-    return this.memberRepo.save(member);
+    const saved = await this.memberRepo.save(member);
+    return serializeMember(saved);
   }
 
   async removeMember(groupId: string, memberId: string, userId: string): Promise<void> {
     await this.assertAdminOrTrainer(groupId, userId);
-    const member = await this.memberRepo.findOne({
-      where: { id: memberId, groupId },
-    });
+    const member = await this.memberRepo.findOne({ where: { id: memberId, groupId } });
     if (!member) throw new NotFoundException('Membro não encontrado');
     await this.memberRepo.remove(member);
   }
@@ -204,12 +248,7 @@ export class SportsGroupsService {
     return this.classRepo.save(cls);
   }
 
-  async updateClass(
-    groupId: string,
-    classId: string,
-    userId: string,
-    dto: any,
-  ): Promise<SportsGroupClass> {
+  async updateClass(groupId: string, classId: string, userId: string, dto: any): Promise<SportsGroupClass> {
     await this.assertAdminOrTrainer(groupId, userId);
     const cls = await this.classRepo.findOne({ where: { id: classId, groupId } });
     if (!cls) throw new NotFoundException('Turma não encontrada');
@@ -224,12 +263,7 @@ export class SportsGroupsService {
     await this.classRepo.remove(cls);
   }
 
-  async enrollMember(
-    groupId: string,
-    classId: string,
-    memberId: string,
-    userId: string,
-  ): Promise<void> {
+  async enrollMember(groupId: string, classId: string, memberId: string, userId: string): Promise<void> {
     await this.assertAdminOrTrainer(groupId, userId);
     const cls = await this.classRepo.findOne({
       where: { id: classId, groupId },
@@ -246,12 +280,7 @@ export class SportsGroupsService {
     }
   }
 
-  async unenrollMember(
-    groupId: string,
-    classId: string,
-    memberId: string,
-    userId: string,
-  ): Promise<void> {
+  async unenrollMember(groupId: string, classId: string, memberId: string, userId: string): Promise<void> {
     await this.assertAdminOrTrainer(groupId, userId);
     const cls = await this.classRepo.findOne({
       where: { id: classId, groupId },
@@ -296,9 +325,7 @@ export class SportsGroupsService {
     const group = await this.groupRepo.findOne({ where: { id: groupId } });
     if (!group) throw new NotFoundException('Grupo não encontrado');
 
-    const session = await this.sessionRepo.findOne({
-      where: { id: sessionId, groupId },
-    });
+    const session = await this.sessionRepo.findOne({ where: { id: sessionId, groupId } });
     if (!session) throw new NotFoundException('Sessão não encontrada');
 
     const membership = await this.memberRepo.findOne({ where: { groupId, userId } });
@@ -311,6 +338,13 @@ export class SportsGroupsService {
   }
 
   // ── Helpers ───────────────────────────────────────────────────────────────
+
+  private resolveNextPaymentDate(dto: any): string | null {
+    if (dto.paymentStatus === 'pago' && dto.billingCycle) {
+      return computeNextPaymentDate(dto.billingCycle);
+    }
+    return dto.nextPaymentDate ?? null;
+  }
 
   private async assertAdmin(groupId: string, userId: string): Promise<void> {
     const group = await this.groupRepo.findOne({ where: { id: groupId } });

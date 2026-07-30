@@ -62,6 +62,16 @@ export class SportsGroupMember {
   @Column({ name: 'plan_value', type: 'decimal', precision: 10, scale: 2, nullable: true })
   planValue: number;
 
+  // billing cycle: 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'annually'
+  @Column({ name: 'billing_cycle', nullable: true })
+  billingCycle: string;
+
+  @Column({ name: 'cycle_start_date', type: 'date', nullable: true })
+  cycleStartDate: string;
+
+  @Column({ name: 'next_payment_date', type: 'date', nullable: true })
+  nextPaymentDate: string;
+
   @CreateDateColumn({ name: 'joined_at' })
   joinedAt: Date;
 }
