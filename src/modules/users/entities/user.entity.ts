@@ -55,4 +55,20 @@ export class User {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  // ── Wallet/Planner columns — declared here so sync does not drop them ──────
+  @Column({ select: false, nullable: true, default: 'full' })
+  plan: string;
+
+  @Column('text', { array: true, select: false, nullable: true, default: [], name: 'discount_tags' })
+  discountTags: string[];
+
+  @Column({ name: 'reset_token', select: false, nullable: true })
+  resetToken: string;
+
+  @Column({ name: 'reset_token_expiry', type: 'timestamp', select: false, nullable: true })
+  resetTokenExpiry: Date;
+
+  @Column({ name: 'partner_id', type: 'uuid', select: false, nullable: true })
+  partnerId: string;
 }
