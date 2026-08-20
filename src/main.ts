@@ -21,10 +21,9 @@ async function bootstrap() {
 
   app.enableCors({
     origin: [
-      'https://zeni.embersolutions.com.br',
-      'https://monitor.embersolutions.com.br',
+      /^https?:\/\/([a-z0-9-]+\.)?tremtech\.dev\.br$/,
       'http://localhost:8080',
-      'http://localhost:5173'
+      'http://localhost:5173',
     ],
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
