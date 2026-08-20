@@ -77,4 +77,11 @@ export class User {
 
   @Column({ name: 'partner_id', type: 'uuid', select: false, nullable: true })
   partnerId: string;
+
+  // ── LGPD columns ──────────────────────────────────────────────────────────────
+  @Column({ name: 'lgpd_consent_at', type: 'timestamp', select: false, nullable: true })
+  lgpdConsentAt: Date;
+
+  @Column({ name: 'deleted_at', type: 'timestamp', select: false, nullable: true })
+  deletedAt: Date;
 }

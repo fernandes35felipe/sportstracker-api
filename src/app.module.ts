@@ -1,5 +1,5 @@
 import { Module, OnApplicationBootstrap } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -17,6 +17,8 @@ import { TrainerAthletesModule } from './modules/trainer-athletes/trainer-athlet
 import { EvolutionPhotosModule } from './modules/evolution-photos/evolution-photos.module';
 import { PhysicalEvaluationsModule } from './modules/physical-evaluations/physical-evaluations.module';
 import { SportsGroupsModule } from './modules/sports-groups/sports-groups.module';
+import { AuditModule } from './audit/audit.module';
+import { AuditInterceptor } from './audit/audit.interceptor';
 
 import { User } from './modules/users/entities/user.entity';
 import { Workout } from './modules/workouts/entities/workout.entity';
@@ -31,6 +33,7 @@ import { SportsGroupMember } from './modules/sports-groups/entities/sports-group
 import { SportsGroupClass } from './modules/sports-groups/entities/sports-group-class.entity';
 import { SportsGroupSession } from './modules/sports-groups/entities/sports-group-session.entity';
 import { SportsGroupSessionFeedback } from './modules/sports-groups/entities/sports-group-session-feedback.entity';
+import { AuditLog } from './audit/audit-log.entity';
 
 @Module({
   imports: [
@@ -48,7 +51,7 @@ import { SportsGroupSessionFeedback } from './modules/sports-groups/entities/spo
             User, Workout, WorkoutExerciseLog, Exercise, Goal, TrainerAthleteRelation,
             EvolutionPhoto, PhysicalEvaluation,
             SportsGroup, SportsGroupMember, SportsGroupClass, SportsGroupSession,
-            SportsGroupSessionFeedback,
+            SportsGroupSessionFeedback, AuditLog,
           ],
           synchronize: true,
           ssl: false,
@@ -80,9 +83,11 @@ import { SportsGroupSessionFeedback } from './modules/sports-groups/entities/spo
     EvolutionPhotosModule,
     PhysicalEvaluationsModule,
     SportsGroupsModule,
+    AuditModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
   ],
 })
 export class AppModule implements OnApplicationBootstrap {

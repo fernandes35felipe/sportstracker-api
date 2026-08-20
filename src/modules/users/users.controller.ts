@@ -8,11 +8,13 @@ import {
   Query,
   UseGuards,
   Request,
+  Res,
   Body,
   UseInterceptors,
   UploadedFile,
   BadRequestException,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -93,5 +95,27 @@ export class UsersController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.usersService.remove(id);
+  }
+
+  // ── LGPD endpoints ───────────────────────────────────────────────────────────
+
+  @Get('me/export')
+  async exportData(@Request() req: any, @Res() res: Response) {
+    const data = await this.usersService.exportUserData(req.user.userId);
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="meus-dados-${req.user.userId}.json"`);
+    res.send(JSON.stringify(data, null, 2));
+  }
+
+  @Delete('me')
+  async deleteMe(@Request() req: any) {
+    await this.usersService.anonymizeUser(req.user.userId);
+    return { ok: true, message: 'Conta anonimizada com sucesso.' };
+  }
+
+  @Patch('me/consent')
+  async recordConsent(@Request() req: any) {
+    await this.usersService.recordConsent(req.user.userId);
+    return { ok: true, consentedAt: new Date().toISOString() };
   }
 }

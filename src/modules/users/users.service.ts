@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, ILike } from 'typeorm';
+import { DataSource, Repository, ILike } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
 import { User } from './entities/user.entity';
@@ -10,6 +10,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 export class UsersService {
   constructor(
     @InjectRepository(User) private userRepo: Repository<User>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async findAll(): Promise<User[]> {
@@ -65,5 +66,41 @@ export class UsersService {
     });
     if (excludeId) return results.filter((u) => u.id !== excludeId);
     return results;
+  }
+
+  // ── LGPD ─────────────────────────────────────────────────────────────────────
+
+  async recordConsent(userId: string): Promise<void> {
+    await this.userRepo.update(userId, { lgpdConsentAt: new Date() } as any);
+  }
+
+  async exportUserData(userId: string): Promise<Record<string, unknown>> {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) return {};
+
+    const qr = this.dataSource.createQueryRunner();
+    const [workouts, goals, physicalEvaluations, evolutionPhotos] = await Promise.all([
+      qr.query('SELECT * FROM workouts WHERE user_id = $1', [userId]),
+      qr.query('SELECT * FROM goals WHERE user_id = $1', [userId]),
+      qr.query('SELECT * FROM physical_evaluations WHERE user_id = $1', [userId]).catch(() => []),
+      qr.query('SELECT * FROM evolution_photos WHERE user_id = $1', [userId]).catch(() => []),
+    ]);
+
+    return {
+      exportedAt: new Date().toISOString(),
+      user: { id: user.id, email: user.email, fullName: user.fullName, role: user.role, createdAt: user.createdAt },
+      workouts,
+      goals,
+      physicalEvaluations,
+      evolutionPhotos,
+    };
+  }
+
+  async anonymizeUser(userId: string): Promise<void> {
+    const anon = `anon_${userId.substring(0, 8)}`;
+    await this.dataSource.query(
+      `UPDATE users SET email = $1, full_name = $2, password = $3, bio = NULL, avatar = NULL, pix_key = NULL, deleted_at = NOW() WHERE id = $4`,
+      [`${anon}@deleted.invalid`, anon, 'ANONYMIZED', userId],
+    );
   }
 }
