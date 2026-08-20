@@ -20,8 +20,25 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: { sub: string; email: string; role?: string }) {
-    // Always read role from DB so role changes take effect without re-login
-    const dbUser = await this.userRepo.findOne({ where: { id: payload.sub } });
+    let dbUser = await this.userRepo.findOne({ where: { id: payload.sub } });
+
+    if (!dbUser) {
+      // User provisioned by another service (e.g. Pensieve) — create in shared DB
+      // to avoid FK violations when they interact with sports resources.
+      try {
+        dbUser = await this.userRepo.save({
+          id: payload.sub,
+          email: payload.email,
+          role: 'athlete',
+          isActive: true,
+        });
+      } catch {
+        // Race condition or email already exists with a different id — re-fetch
+        dbUser = await this.userRepo.findOne({ where: { id: payload.sub } })
+          ?? await this.userRepo.findOne({ where: { email: payload.email } });
+      }
+    }
+
     return {
       userId: payload.sub,
       email: payload.email,
